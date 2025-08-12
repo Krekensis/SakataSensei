@@ -77,7 +77,7 @@
     
     </div>
     <!-- Trending Anime -->
-    <div class="{isLoaded ? "animate-fade-in-bottom" : "opacity-0"} transition-all duration-500 ease- mt-5 mb-10 px-6 sm:px-10 lg:px-27">
+    <div class="{isLoaded ? "animate-fade-in-bottom" : "opacity-0"} transition-all duration-500 mt-5 mb-10 px-6 sm:px-10 lg:px-27">
         <TrendingAnime />
     </div>
 </section>
