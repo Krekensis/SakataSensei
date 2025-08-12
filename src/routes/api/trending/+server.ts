@@ -10,11 +10,18 @@ export const GET = async () => {
 					}
 					coverImage {
 						extraLarge
+						color
 					}
+					format
+					startDate {
+						year
+					}
+					averageScore
+					meanScore
+					status
 				}
 			}
-		}
-	`;
+		}`;
 
 	const res = await fetch("https://graphql.anilist.co", {
 		method: "POST",
