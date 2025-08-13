@@ -23,6 +23,10 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
         redirect_uri: redirectUri
     });
 
+    if (clientSecret) {
+        body.append("client_secret", clientSecret);
+    }
+
     try {
         const res = await fetch("https://myanimelist.net/v1/oauth2/token", {
             method: "POST",
