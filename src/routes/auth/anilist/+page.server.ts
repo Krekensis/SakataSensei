@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
     const data = await res.json();
 
     if (data.access_token) {
-        //console.log("Anilist Token Response:", data.access_token);
+        console.log("Anilist Token Response:", data.access_token);
         return { token: data.access_token };
     } else {
         return { error: "Failed to retrieve token", details: data };
