@@ -1,53 +1,17 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import SVG from "$lib/components/SVG.svelte";
     import Navbar from "$lib/components/Navbar.svelte";
     import { importAnimeList } from '$lib/utils/importAnimeList';
+    import { OAuth } from "$lib/utils/OAuth";
+    import Cookies from "js-cookie";
 
     let isLoaded = false;
     let isLoggedIn = false;
     let loginType = "none";
 
-    function goTo(path: string) {
-        window.location.href = path;
-    }
-
-    function connectAniList() {
-        const clientId = import.meta.env.VITE_ANILIST_CLIENT_ID;
-        const redirectUri = import.meta.env.VITE_ANILIST_REDIRECT_URI;
-        const authUrl = `https://anilist.co/api/v2/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
-        goTo(authUrl);
-    }
-
-    function generateCodeVerifier(length = 128): string {
-        const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
-        let verifier = "";
-        for (let i = 0; i < length; i++) {
-            verifier += possible.charAt(Math.floor(Math.random() * possible.length));
-        }
-        return verifier;
-    }
-
-    async function connectMyAnimeList() {
-        const clientId = import.meta.env.VITE_MYANIMELIST_CLIENT_ID;
-        const redirectUri = import.meta.env.VITE_MYANIMELIST_REDIRECT_URI;
-
-        const codeVerifier = generateCodeVerifier();
-        const codeChallenge = codeVerifier;
-        
-        sessionStorage.setItem("mal_code_verifier", codeVerifier);
-
-        const authUrl = `https://myanimelist.net/v1/oauth2/authorize?` +
-                        `response_type=code&` +
-                        `client_id=${clientId}&` +
-                        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-                        `code_challenge=${codeChallenge}&` +
-                        `code_challenge_method=plain`;
-
-        goTo(authUrl);
-    }
-
     function handleListImport() {
-        const accessToken = sessionStorage.getItem("anilist_token") || sessionStorage.getItem("mal_token") 
+        const accessToken = Cookies.get("anilist_token") || Cookies.get("mal_token") 
         if (!accessToken) {
             alert("You need to be logged in to import your anime list.");
             return;
@@ -64,10 +28,17 @@
             });
     }
 
+    function Logout(){
+        Cookies.remove("anilist_token");
+        Cookies.remove("mal_token");
+        isLoggedIn = false;
+        loginType = "none";
+    }
+
     onMount(async () => {
 
-        let isAnilist = Boolean(sessionStorage.getItem("anilist_token"));
-        let isMyAnimeList = Boolean(sessionStorage.getItem("mal_token"));
+        let isAnilist = Boolean(Cookies.get("anilist_token"));
+        let isMyAnimeList = Boolean(Cookies.get("mal_token"));
 
         isLoggedIn = isAnilist || isMyAnimeList;
         loginType = isAnilist ? "AniList" : isMyAnimeList ? "MyAnimeList" : "none";
@@ -106,45 +77,41 @@
             {#if isLoggedIn}
                 <div class="flex items-center mb-4 text-green-400 font-mono gap-2">
                 <!-- Checkmark Icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                
-                <span>You are already logged in via</span>
+                    <SVG name="checkmark" size="w-5 h-5" />
+                    
+                    <span>You are already logged in via</span>
 
-                {#if loginType === "AniList"}
-                    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-4.5 h-4.5">
-                        <path d="M24 17.53v2.421c0 .71-.391 1.101-1.1 1.101h-5l-.057-.165L11.84 3.736c.106-.502.46-.788 1.053-.788h2.422c.71 0 1.1.391 1.1 1.1v12.38H22.9c.71 0 1.1.392 1.1 1.101zM11.034 2.947l6.337 18.104h-4.918l-1.052-3.131H6.019l-1.077 3.131H0L6.361 2.948h4.673zm-.66 10.96-1.69-5.014-1.541 5.015h3.23z"/>
-                    </svg>
-                {:else if loginType === "MyAnimeList"}
-                    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-8 h-8">
-                        <path d="M8.45 15.91H6.067v-5.506h-.028l-1.833 2.454-1.796-2.454H2.39v5.507H0V6.808h2.263l1.943 2.671 1.98-2.671H8.45zm8.499 0h-2.384v-2.883H11.96c.008 1.011.373 1.989.914 2.884l-1.942 1.284c-.52-.793-1.415-2.458-1.415-4.527 0-1.015.211-2.942 1.638-4.37a4.809 4.809 0 0 1 2.737-1.37c.96-.15 1.936-.12 2.905-.12l.555 2.051H15.48c-.776 0-1.389.113-1.839.337-.637.32-1.009.622-1.447 1.78h2.372v-1.84h2.384zm3.922-2.05H24l-.555 2.05h-4.962V6.809h2.388z"/>
-                    </svg>
-                {/if}
-            </div>
-                <button on:click={handleListImport} class="px-4 py-2 bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white flex items-center gap-2" >
-                    <!-- Import Icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"/>
-                    </svg>
-                    Import Lists
-                </button>
+                    {#if loginType === "AniList"}
+                        <SVG name="anilist" size="w-4.5 h-4.5" />
+                    {:else if loginType === "MyAnimeList"}
+                        <SVG name="mal" size="w-8 h-8" />
+                    {/if}
+                </div>
+                <div class="flex flex-row gap-3">
+                    <button on:click={handleListImport} class="px-4 py-[8.5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2" >
+                        <!-- Import Icon -->
+                        <SVG name="import" size="w-5 h-5" />
+                        Import Lists
+                    </button>
+                    <button on:click={Logout} class="px-4 py-[8.5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2" >
+                        <SVG name="logout" size="w-5 h-5" />
+                        Logout
+                    </button>
+                </div>
             {:else}
                 <div class="flex items-center mb-4 text-red-400 font-mono">
                     <!-- Cross Icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <span>You are not logged in</span>
+                    <SVG name="cross" size="w-5 h-5" />
+                    <span class="ml-2">You are not logged in</span>
                 </div>
                 <div class="flex flex-row gap-3">
-                    <button on:click={connectAniList} class="px-4 py-1.5 bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2">
+                    <button on:click={() => OAuth("AniList")} class="px-4 py-[5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2">
                         Connect with
-                        <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-4.5 h-4.5"><path d="M24 17.53v2.421c0 .71-.391 1.101-1.1 1.101h-5l-.057-.165L11.84 3.736c.106-.502.46-.788 1.053-.788h2.422c.71 0 1.1.391 1.1 1.1v12.38H22.9c.71 0 1.1.392 1.1 1.101zM11.034 2.947l6.337 18.104h-4.918l-1.052-3.131H6.019l-1.077 3.131H0L6.361 2.948h4.673zm-.66 10.96-1.69-5.014-1.541 5.015h3.23z"/></svg>
+                        <SVG name="anilist" size="w-4.5 h-4.5" />
                     </button>
-                    <button on:click={connectMyAnimeList} class="px-4 py-1.5 bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2">
+                    <button on:click={() => OAuth("MyAnimeList")} class="px-4 py-[5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2">
                         Connect with
-                        <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-8 h-8"><path d="M8.45 15.91H6.067v-5.506h-.028l-1.833 2.454-1.796-2.454H2.39v5.507H0V6.808h2.263l1.943 2.671 1.98-2.671H8.45zm8.499 0h-2.384v-2.883H11.96c.008 1.011.373 1.989.914 2.884l-1.942 1.284c-.52-.793-1.415-2.458-1.415-4.527 0-1.015.211-2.942 1.638-4.37a4.809 4.809 0 0 1 2.737-1.37c.96-.15 1.936-.12 2.905-.12l.555 2.051H15.48c-.776 0-1.389.113-1.839.337-.637.32-1.009.622-1.447 1.78h2.372v-1.84h2.384zm3.922-2.05H24l-.555 2.05h-4.962V6.809h2.388z"/></svg>
+                        <SVG name="mal" size="w-8 h-8" />
                     </button>
                 </div>
             {/if}

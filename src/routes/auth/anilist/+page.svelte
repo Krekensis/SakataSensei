@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import Cookies from 'js-cookie';
     
     function goTo(path: string) {
         window.location.href = path;
@@ -16,8 +17,16 @@
         }, 50);
 
         if (data.token) {
-            successMessage = 'Logged in successfully! Redirecting...';
-            sessionStorage.setItem("anilist_token", data.token);
+            successMessage = 'Successfully connected to AniList! Redirecting...';
+            
+            //cookie instead of sessionStorage
+            Cookies.set('anilist_token', data.token, {
+                
+                expires: 7,
+                secure: import.meta.env.VERSION_TYPE === "test" ? false : true,
+                sameSite: 'Lax',
+                path: '/'     
+            });
 
             setTimeout(() => {
                 goTo("/recommend/by-list");

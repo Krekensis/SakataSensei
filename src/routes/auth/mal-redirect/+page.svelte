@@ -1,4 +1,5 @@
 <script lang="ts">
+    import Cookies from 'js-cookie';
     import { onMount } from 'svelte';
 
     function goTo(path: string) {
@@ -8,7 +9,9 @@
     onMount(() => {
         const params = new URLSearchParams(window.location.search);
         const code = params.get("code");
-        const codeVerifier = sessionStorage.getItem("mal_code_verifier");
+
+        //cookie instead of sessionStorage
+        const codeVerifier = Cookies.get("mal_code_verifier");
 
         if (!code || !codeVerifier) {
             alert("Missing code or code_verifier");

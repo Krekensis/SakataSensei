@@ -1,14 +1,13 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    
+    import Cookies from 'js-cookie';
+
     function goTo(path: string) {
         window.location.href = path;
     }
 
     export let data: { 
         token?: string; 
-        refresh_token?: string;
-        expires_in?: number;
         error?: string; 
         details?: any 
     };
@@ -24,16 +23,16 @@
         if (data.token) {
             successMessage = 'Successfully connected to MyAnimeList! Redirecting...';
             
-            sessionStorage.setItem("mal_token", data.token);
-            if (data.refresh_token) {
-                sessionStorage.setItem("mal_refresh_token", data.refresh_token);
-            }
-            if (data.expires_in) {
-                const expiryTime = Date.now() + (data.expires_in * 1000);
-                sessionStorage.setItem("mal_token_expiry", expiryTime.toString());
-            }
-
-            sessionStorage.removeItem("mal_code_verifier");
+            //cookie instead of sessionStorage
+            Cookies.set('mal_token', data.token, {
+                
+                expires: 7,
+                secure: import.meta.env.VERSION_TYPE === "test" ? false : true,
+                sameSite: 'Lax',
+                path: '/'     
+            });
+        
+            Cookies.remove('mal_code_verifier');
 
             setTimeout(() => {
                 goTo("/recommend/by-list");
@@ -59,6 +58,12 @@
                 {#if data.details}
                     <pre>{JSON.stringify(data.details, null, 2)}</pre>
                 {/if}
+                <button 
+                    on:click={goBack}
+                    class="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                >
+                    Go Back
+                </button>
             {:else if successMessage}
                 <p class="text-green-400 font-mono">{successMessage}</p>
             {:else}
