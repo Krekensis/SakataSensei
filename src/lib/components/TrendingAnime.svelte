@@ -7,7 +7,7 @@
 	onMount(async () => {
 		const res = await fetch('/api/trending');
 		trending = await res.json();
-		imageLoaded = new Array(trending.length).fill(false);
+		imageLoaded = new Array(trending.length).fill(false); 
 	});
 
 	function handleImageLoad(index: number) {

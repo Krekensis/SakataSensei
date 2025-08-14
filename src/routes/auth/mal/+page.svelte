@@ -24,7 +24,6 @@
         if (data.token) {
             successMessage = 'Successfully connected to MyAnimeList! Redirecting...';
             
-            // Store tokens and expiry
             sessionStorage.setItem("mal_token", data.token);
             if (data.refresh_token) {
                 sessionStorage.setItem("mal_refresh_token", data.refresh_token);
@@ -34,10 +33,8 @@
                 sessionStorage.setItem("mal_token_expiry", expiryTime.toString());
             }
 
-            // Clear the code verifier as it's no longer needed
             sessionStorage.removeItem("mal_code_verifier");
 
-            // Redirect after showing success message
             setTimeout(() => {
                 goTo("/recommend/by-list");
             }, 1500);
