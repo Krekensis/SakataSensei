@@ -9,10 +9,10 @@
     let isLoaded = false;
     let isLoggedIn = false;
     let loginType = "none";
+    let accessToken = "";
 
-    function handleListImport() {
-        const accessToken = Cookies.get("anilist_token") || Cookies.get("mal_token") 
-        if (!accessToken) {
+    async function handleListImport() {
+        if (!isLoggedIn) {
             alert("You need to be logged in to import your anime list.");
             return;
         }
@@ -28,20 +28,19 @@
             });
     }
 
-    function Logout(){
-        Cookies.remove("anilist_token");
-        Cookies.remove("mal_token");
+    async function logout() {
+        await fetch('/auth/logout', { method: 'POST' });
         isLoggedIn = false;
-        loginType = "none";
+        loginType = 'none';
     }
 
     onMount(async () => {
+        const status = await fetch('/auth/status', { credentials: 'include' });
+        const { isLoggedIn: logged, accessToken: token, loginType: type } = await status.json();
 
-        let isAnilist = Boolean(Cookies.get("anilist_token"));
-        let isMyAnimeList = Boolean(Cookies.get("mal_token"));
-
-        isLoggedIn = isAnilist || isMyAnimeList;
-        loginType = isAnilist ? "AniList" : isMyAnimeList ? "MyAnimeList" : "none";
+        isLoggedIn = logged;
+        loginType = type;
+        accessToken = token || "";
 
         const imagesToLoad = Array.from(document.images)
             .filter(img => !img.complete)
@@ -93,7 +92,7 @@
                         <SVG name="import" size="w-5 h-5" />
                         Import Lists
                     </button>
-                    <button on:click={Logout} class="px-4 py-[8.5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2" >
+                    <button on:click={logout} class="px-4 py-[8.5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2" >
                         <SVG name="logout" size="w-5 h-5" />
                         Logout
                     </button>

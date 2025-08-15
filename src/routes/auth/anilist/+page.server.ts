@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ url, fetch }) => {
+export const load: PageServerLoad = async ({ url, fetch, cookies }) => {
 
     const code = url.searchParams.get("code");
 
@@ -28,7 +28,16 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 
     if (data.access_token) {
         console.log("Anilist Token Response:", data.access_token);
-        return { token: data.access_token };
+
+        cookies.set('anilist_token', data.access_token, {
+            httpOnly: true,
+            secure: import.meta.env.PROD,
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7 // 7 days
+        });
+
+        return { success: true };
     } else {
         return { error: "Failed to retrieve token", details: data };
     }

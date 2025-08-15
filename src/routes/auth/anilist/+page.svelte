@@ -1,12 +1,11 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import Cookies from 'js-cookie';
     
     function goTo(path: string) {
         window.location.href = path;
     }
 
-    export let data: { token?: string; error?: string; details?: any };
+    export let data: { success?: Boolean; error?: string; details?: any };
 
     let isLoaded = false;
     let successMessage = '';
@@ -16,17 +15,8 @@
             isLoaded = true;
         }, 50);
 
-        if (data.token) {
+        if (data.success) {
             successMessage = 'Successfully connected to AniList! Redirecting...';
-            
-            //cookie instead of sessionStorage
-            Cookies.set('anilist_token', data.token, {
-                
-                expires: 7,
-                secure: import.meta.env.VERSION_TYPE === "test" ? false : true,
-                sameSite: 'Lax',
-                path: '/'     
-            });
 
             setTimeout(() => {
                 goTo("/recommend/by-list");

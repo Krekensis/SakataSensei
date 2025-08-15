@@ -1,12 +1,12 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import Cookies from 'js-cookie';
 
     function goTo(path: string) {
         window.location.href = path;
     }
 
-    export let data: { 
+    export let data: {
+        success?: boolean;
         token?: string; 
         error?: string; 
         details?: any 
@@ -20,20 +20,9 @@
             isLoaded = true;
         }, 50);
 
-        if (data.token) {
+        if (data.success) {
             successMessage = 'Successfully connected to MyAnimeList! Redirecting...';
-            
-            //cookie instead of sessionStorage
-            Cookies.set('mal_token', data.token, {
-                
-                expires: 7,
-                secure: import.meta.env.VERSION_TYPE === "test" ? false : true,
-                sameSite: 'Lax',
-                path: '/'     
-            });
         
-            Cookies.remove('mal_code_verifier');
-
             setTimeout(() => {
                 goTo("/recommend/by-list");
             }, 1500);

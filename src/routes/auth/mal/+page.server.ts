@@ -1,18 +1,20 @@
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ url, fetch }) => {
+export const load: PageServerLoad = async ({ url, fetch, cookies }) => {
     const code = url.searchParams.get("code");
-    const codeVerifier = url.searchParams.get("verifier");
+    const codeVerifier = cookies.get("mal_code_verifier");
 
     if (!code || !codeVerifier) {
-        return { 
-            error: "Missing required parameters", 
-            details: { code: !!code, verifier: !!codeVerifier } 
+        return {
+            error: "Missing required parameters",
+            details: { code: !!code, verifier: !!codeVerifier }
         };
     }
 
+    cookies.set("mal_code_verifier", "", { path: "/", expires: new Date(0) });
+
     const clientId = import.meta.env.VITE_MYANIMELIST_CLIENT_ID;
-    const clientSecret = import.meta.env.VITE_MYANIMELIST_SECRET; 
+    const clientSecret = import.meta.env.VITE_MYANIMELIST_SECRET;
     const redirectUri = import.meta.env.VITE_MYANIMELIST_REDIRECT_URI;
 
     const body = new URLSearchParams({
@@ -30,7 +32,7 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
     try {
         const res = await fetch("https://myanimelist.net/v1/oauth2/token", {
             method: "POST",
-            headers: { 
+            headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Accept": "application/json"
             },
@@ -39,22 +41,22 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 
         const responseText = await res.text();
         let data;
-        
+
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            return { 
-                error: "Invalid response from MAL", 
-                details: { 
-                    status: res.status, 
-                    response: responseText 
-                } 
+            return {
+                error: "Invalid response from MAL",
+                details: {
+                    status: res.status,
+                    response: responseText
+                }
             };
         }
 
         if (!res.ok) {
-            return { 
-                error: data.error || "Failed to exchange code for token", 
+            return {
+                error: data.error || "Failed to exchange code for token",
                 details: {
                     status: res.status,
                     error_description: data.error_description,
@@ -64,22 +66,32 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
         }
 
         if (data.access_token) {
-            //console.log("MAL Token Response:", data.access_token);
-            return { 
-                token: data.access_token, 
+            console.log("MAL Token Response:", data.access_token);
+
+            cookies.set('mal_token', data.access_token, {
+                httpOnly: true,
+                secure: import.meta.env.PROD,
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 60 * 60 * 24 * 7  // 7 days
+            });
+
+            return {
+                success: true,
+                token: data.access_token,
                 refresh_token: data.refresh_token,
                 expires_in: data.expires_in,
                 token_type: data.token_type
             };
         } else {
-            return { 
-                error: "No access token in response", 
-                details: data 
+            return {
+                error: "No access token in response",
+                details: data
             };
         }
     } catch (err) {
-        return { 
-            error: "Network error during token exchange", 
+        return {
+            error: "Network error during token exchange",
             details: err instanceof Error ? err.message : String(err)
         };
     }
