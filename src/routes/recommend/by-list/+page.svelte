@@ -4,36 +4,73 @@
     import Navbar from "$lib/components/Navbar.svelte";
     import { importAnimeList } from '$lib/utils/importAnimeList';
     import { OAuth } from "$lib/utils/OAuth";
-    import Cookies from "js-cookie";
 
     let isLoaded = false;
     let isLoggedIn = false;
     let loginType = "none";
     let accessToken = "";
 
+    let isImporting = false;
+    let importSuccess = false;
+    let importError = "";          
+    let importedData: any = null;
+
     async function handleListImport() {
         if (!isLoggedIn) {
-            alert("You need to be logged in to import your anime list.");
+            importError = "You need to be logged in to import your anime list.";
             return;
         }
 
-        importAnimeList(loginType, accessToken)
-            .then(data => {
-                console.log("Anime list imported successfully:", JSON.stringify(data));
-                alert("Anime list imported successfully!");
-            })
-            .catch(error => {
-                console.error("Error importing anime list:", error);
-                alert("Failed to import anime list. Please try again.");
-            });
+        isImporting = true;
+        importError = "";
+        importSuccess = false;
+
+        try {
+            const data = await importAnimeList(loginType, accessToken);
+            importedData = data;
+            importSuccess = true;
+        } catch (error) {
+            console.error("Error importing anime list:", error);
+            importError = "Failed to import anime list. Please try again.";
+        } finally {
+            isImporting = false;
+        }
     }
 
     async function logout() {
         await fetch('/auth/logout', { method: 'POST' });
         isLoggedIn = false;
         loginType = 'none';
+        importSuccess = false;
+        importedData = null;
     }
 
+    function syntaxHighlightJson(json: string): string {
+  if (!json) return "";
+
+  return json.replace(
+    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+    (match: string): string => {
+      let cls = "text-white"; // default
+
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          cls = "text-yellow-400"; // key
+        } else {
+          cls = "text-green-400"; // string
+        }
+      } else if (/true|false/.test(match)) {
+        cls = "text-blue-400"; // booleans
+      } else if (/null/.test(match)) {
+        cls = "text-gray-400"; // null
+      } else {
+        cls = "text-purple-400"; // numbers
+      }
+
+      return `<span class="${cls}">${match}</span>`;
+    }
+  );
+}
     onMount(async () => {
         const status = await fetch('/auth/status', { credentials: 'include' });
         const { isLoggedIn: logged, accessToken: token, loginType: type } = await status.json();
@@ -58,7 +95,7 @@
 
 <Navbar color="#a78bfa"/>
 
-<section class="min-h-screen bg-gradient-to-br from-[#090311] to-[#141634] relative text-white overflow-hidden">
+<section class="bg-transparent relative text-white overflow-hidden">
     <div class="relative z-10 flex flex-col-reverse lg:flex-row items-center justify-between px-6 sm:px-10 lg:px-27 pt-24 lg:pt-36 pb-5 gap-1">
         
         <div class="text-left w-full max-w-3xl {isLoaded ? 'animate-fade-in-top' : 'opacity-0'}">
@@ -87,16 +124,43 @@
                     {/if}
                 </div>
                 <div class="flex flex-row gap-3">
-                    <button on:click={handleListImport} class="px-4 py-[8.5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2" >
-                        <!-- Import Icon -->
-                        <SVG name="import" size="w-5 h-5" />
-                        Import Lists
-                    </button>
+                    {#if !importSuccess}
+                        <button 
+                            on:click={handleListImport} 
+                            class="px-4 py-[8.5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2"
+                            disabled={isImporting}
+                        >
+                            {#if isImporting}
+                                <SVG name="loader" size="w-5 h-5" className="animate-spin" />
+                                Importing...
+                            {:else}
+                                <SVG name="import" size="w-5 h-5" />
+                                Import Lists
+                            {/if}
+                        </button>
+                    {:else}
+                        <button class="px-4 py-[8.5px] bg-green-400/30 hover:bg-green-400/40 rounded-lg text-white font-mono flex items-center gap-2">
+                            <SVG name="star" size="w-5 h-5" />
+                            Recommend
+                        </button>
+                    {/if}
                     <button on:click={logout} class="px-4 py-[8.5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2" >
                         <SVG name="logout" size="w-5 h-5" />
                         Logout
                     </button>
                 </div>
+                {#if importError}
+                    <p class="mt-3 text-red-400 font-mono">{importError}</p>
+                {/if}
+                {#if importSuccess && importedData}
+                    <div class="mt-3 p-3 bg-white/10 rounded-lg font-mono text-sm max-h-150 overflow-y-auto text-white overflow-x-auto">
+                        <p class="mb-2 text-green-400">Imported Lists:</p>
+                        <p class="mb-2 text-green-400"> - Anime completed: {importedData.completed.length}</p>
+                        <p class="mb-2 text-green-400"> - Anime watching: {importedData.current.length}</p>
+                        <p class="mb-2 text-green-400"> - Anime planned: {importedData.planning.length}</p>
+                        <pre class="whitespace-pre-wrap break-all">{@html syntaxHighlightJson(JSON.stringify(importedData, null, 2))}</pre>
+                    </div>
+                {/if}
             {:else}
                 <div class="flex items-center mb-4 text-red-400 font-mono">
                     <!-- Cross Icon -->
@@ -117,6 +181,8 @@
         </div>
         
         <!-- Image -->
+        
+        {#if !importSuccess && !importedData}
         <div class="flex-shrink-0">
             <!-- Mobile image -->
             <img
@@ -132,6 +198,7 @@
                 class="hidden lg:block w-[260px] sm:w-[300px] lg:w-[320px] h-auto drop-shadow-2xl rounded-lg {isLoaded ? 'animate-fade-in-bottom' : 'opacity-0'} ml-3"
             />
         </div>
+        {/if}
     
     </div>
 </section>
