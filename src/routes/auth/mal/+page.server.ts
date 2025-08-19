@@ -65,6 +65,7 @@ export const load: PageServerLoad = async ({ url, fetch, cookies }) => {
             };
         }
 
+        console.log(data)
         if (data.access_token) {
             console.log("MAL Token Response:", data.access_token);
 

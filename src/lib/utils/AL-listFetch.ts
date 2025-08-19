@@ -1,23 +1,22 @@
 interface AnimeEntry {
     id: number;
+    idAl: number;
     title: string;
     englishTitle: string | null;
     genres: string[];
     score: number;
     scoreFormat: string;
+    imageUrl?: string;
+    bannerImageUrl?: string | null;
     status: 'COMPLETED' | 'CURRENT' | 'PLANNING';
-    repeat: number;
     format: string;
     episodes: number | null;
     year: number | null;
     season: string | null;
-    averageScore: number;
-    popularity: number;
+    meanScore: number;
+    members: number;
     studios: string[];
-    tags: Array<{
-        name: string;
-        rank: number;
-    }>;
+    tags: string[];
     source: string;
 }
 
@@ -84,6 +83,7 @@ export async function fetchAniList(token: string, viewerId: string): Promise<Imp
                                     repeat
                                     media {
                                         id
+                                        idMal
                                         title {
                                             romaji
                                             english
@@ -93,9 +93,13 @@ export async function fetchAniList(token: string, viewerId: string): Promise<Imp
                                         startDate {
                                             year
                                         }
+                                        coverImage {
+                                            large
+                                        }
+                                        bannerImage
                                         season
                                         genres
-                                        averageScore
+                                        meanScore
                                         popularity
                                         source
                                         tags {
@@ -155,25 +159,24 @@ export async function fetchAniList(token: string, viewerId: string): Promise<Imp
 
         lists.forEach((list: any) => {
             const entries: AnimeEntry[] = list.entries.map((entry: any) => ({
-                id: entry.media.id,
+                id: entry.media.idMal || 0,
+                idAL: entry.media.id || 0,
                 title: entry.media.title.romaji,
                 englishTitle: entry.media.title.english,
                 genres: entry.media.genres || [],
                 score: entry.score || 0,
                 scoreFormat: viewer.mediaListOptions.scoreFormat,
+                imageUrl: entry.media.coverImage?.large || null,
+                bannerImageUrl: entry.media.bannerImage || null,
                 status: list.status,
-                repeat: entry.repeat || 0,
                 format: entry.media.format,
                 episodes: entry.media.episodes,
                 year: entry.media.startDate?.year || null,
                 season: entry.media.season,
-                averageScore: entry.media.averageScore || 0,
-                popularity: entry.media.popularity || 0,
+                meanScore: entry.media.meanScore || 0,
+                members: entry.media.popularity || 0,
                 studios: entry.media.studios?.nodes?.map((studio: any) => studio.name) || [],
-                tags: entry.media.tags?.map((tag: any) => ({
-                    name: tag.name,
-                    rank: tag.rank
-                })) || [],
+                tags: entry.media.tags?.sort((a: any, b: any) => (b.rank ?? 0) - (a.rank ?? 0)).map((tag: any) => tag.name) || [],
                 source: entry.media.source
             }));
 
