@@ -45,7 +45,7 @@
 							</div>
 						</div>
 
-						<div class="flex flex-row items-left flex-wrap gap-1.5 sm:gap-2">
+						<div class="flex flex-row items-left flex-wrap gap-1.5 sm:gap-1.5">
 							<div class="text-[10px] sm:text-sm font-bold font-mono rounded-sm bg-white/5 text-gray-400 group-hover:text-gray-300 px-1 py-0.5  transition-colors duration-300">
 								{anime.format}
 							</div>
