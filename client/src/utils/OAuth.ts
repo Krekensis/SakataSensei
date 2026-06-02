@@ -1,4 +1,4 @@
-import Cookies from "js-cookie";
+
 function goTo(path: string) {
     window.location.href = path;
 }
