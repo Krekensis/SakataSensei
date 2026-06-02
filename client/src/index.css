@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sixtyfour&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geostar Fill&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=New Tegomin&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-audiowide: "Audiowide", sans-serif;
+  --font-geostar: "Geostar Fill", sans-serif;
+  --font-sixtyfour: "Sixtyfour", sans-serif;
+  --font-newtegomin: "New Tegomin", sans-serif;
+}
+
+body {
+  @apply bg-black text-white;
+}
+
+@keyframes fade-in-bottom {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@keyframes fade-in-top {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-top {
+    animation: fade-in-top 500ms ease-out;
+}
+.animate-fade-in-bottom {
+    animation: fade-in-bottom 500ms ease-out;
+}
