@@ -69,7 +69,7 @@ const TrendingAnime: React.FC = () => {
                   <div
                     className="text-xs sm:text-sm font-semibold transition-colors duration-300 truncate max-w-full"
                     style={{
-                      color: hoveringIndex === index && anime.coverImage.color ? anime.coverImage.color : 'white'
+                      color: hoveringIndex === index ? (anime.coverImage.color || '#60a5fa') : 'white'
                     }}
                   >
                     {anime.title.english || anime.title.romaji}

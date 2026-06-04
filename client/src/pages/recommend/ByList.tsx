@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Navbar from '../../components/Navbar';
 import SVG from '../../components/SVG';
 import { importAnimeList } from '../../utils/importAnimeList';
 import { OAuth } from '../../utils/OAuth';
-import RecommendationGrid from '../../components/RecommendationGrid';
+import { FilterSidebar, defaultFilters } from '../../components/FilterSidebar';
+import type { FilterState } from '../../components/FilterSidebar';
+import FilteredRecommendationList from '../../components/FilteredRecommendationList';
+import { fetchAniListBatch } from '../../utils/fetchAniListBatch';
 
 const ByList: React.FC = () => {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -17,9 +20,56 @@ const ByList: React.FC = () => {
     const [importedData, setImportedData] = useState<any>(null);
 
     const [isRecommending, setIsRecommending] = useState(false);
-    const [recommendations, setRecommendations] = useState<any[] | null>(null);
-    const [excludeWatched, setExcludeWatched] = useState(true);
     const [recommendError, setRecommendError] = useState('');
+
+    // The enriched metadata from AniList
+    const [enrichedRecommendations, setEnrichedRecommendations] = useState<any[] | null>(null);
+
+    // Sidebar state
+    const [filters, setFilters] = useState<FilterState>(defaultFilters);
+
+    // Compute available filter options dynamically from the enriched data
+    const availableOptions = useMemo(() => {
+        if (!enrichedRecommendations) return { genres: [], tags: [], formats: [], statuses: [], countries: [], studios: [], maxPop: 2000000 };
+
+        const genres = new Set<string>();
+        const tags = new Set<string>();
+        const formats = new Set<string>();
+        const statuses = new Set<string>();
+        const countries = new Set<string>();
+        const studios = new Set<string>();
+        let maxPop = 1000;
+
+        enrichedRecommendations.forEach(anime => {
+            if (anime.genres) anime.genres.forEach((g: string) => genres.add(g));
+            if (anime.tags) anime.tags.forEach((t: any) => tags.add(t.name));
+            if (anime.format) formats.add(anime.format);
+            if (anime.status) statuses.add(anime.status);
+            if (anime.countryOfOrigin) countries.add(anime.countryOfOrigin);
+            if (anime.studios?.nodes) anime.studios.nodes.forEach((s: any) => studios.add(s.name));
+            if (anime.popularity && anime.popularity > maxPop) maxPop = anime.popularity;
+        });
+
+        return {
+            genres: Array.from(genres).sort(),
+            tags: Array.from(tags).sort(),
+            formats: Array.from(formats).sort(),
+            statuses: Array.from(statuses).sort(),
+            countries: Array.from(countries).sort(),
+            studios: Array.from(studios).sort(),
+            maxPop: Math.ceil(maxPop / 1000) * 1000 // Round up to nearest 1000
+        };
+    }, [enrichedRecommendations]);
+
+    // Update the default popularity filter max when maxPop changes
+    useEffect(() => {
+        if (enrichedRecommendations && availableOptions.maxPop > 0) {
+            setFilters(prev => ({
+                ...prev,
+                popularityRange: [prev.popularityRange[0], availableOptions.maxPop]
+            }));
+        }
+    }, [availableOptions.maxPop, enrichedRecommendations]);
 
     const handleListImport = async () => {
         if (!isLoggedIn) {
@@ -46,19 +96,39 @@ const ByList: React.FC = () => {
     const handleRecommend = async () => {
         setIsRecommending(true);
         setRecommendError("");
+
+        setEnrichedRecommendations(null);
+
         try {
+            // 1. Get raw MAL IDs and scores from our local backend (top 500)
             const res = await fetch('/api/recommend', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ importedData, excludeWatched })
+                // We always tell the backend to NOT exclude watched, because we want to handle that client-side
+                body: JSON.stringify({ importedData, excludeWatched: false })
             });
-            
+
             if (!res.ok) {
-                throw new Error("Failed to get recommendations");
+                throw new Error("Failed to get recommendations from backend");
             }
-            
-            const data = await res.json();
-            setRecommendations(data);
+
+            const rawData = await res.json();
+
+
+            // 2. Extract IDs and batch fetch from AniList
+            const malIds = rawData.map((r: any) => r.id);
+            const enriched = await fetchAniListBatch(malIds);
+
+            // 3. Merge the ML scores into the enriched AniList data
+            const enrichedWithScores = enriched.map(anime => {
+                const rawInfo = rawData.find((r: any) => r.id === anime.idMal);
+                return { ...anime, mlScore: rawInfo?.score || 0 };
+            });
+
+            // 4. Sort by ML score descending just in case AniList scrambled the order
+            enrichedWithScores.sort((a, b) => b.mlScore - a.mlScore);
+
+            setEnrichedRecommendations(enrichedWithScores);
         } catch (error) {
             console.error(error);
             setRecommendError("Failed to fetch recommendations. Please try again.");
@@ -73,32 +143,11 @@ const ByList: React.FC = () => {
         setLoginType('none');
         setImportSuccess(false);
         setImportedData(null);
-        setRecommendations(null);
+
+        setEnrichedRecommendations(null);
     };
 
-    const syntaxHighlightJson = (json: string): string => {
-        if (!json) return "";
-        return json.replace(
-            /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-            (match: string): string => {
-                let cls = "text-white"; // default
-                if (/^"/.test(match)) {
-                    if (/:$/.test(match)) {
-                        cls = "text-yellow-400"; // key
-                    } else {
-                        cls = "text-green-400"; // string
-                    }
-                } else if (/true|false/.test(match)) {
-                    cls = "text-blue-400"; // booleans
-                } else if (/null/.test(match)) {
-                    cls = "text-gray-400"; // null
-                } else {
-                    cls = "text-purple-400"; // numbers
-                }
-                return `<span class="${cls}">${match}</span>`;
-            }
-        );
-    };
+
 
     useEffect(() => {
         const fetchStatus = async () => {
@@ -109,14 +158,13 @@ const ByList: React.FC = () => {
             setLoginType(type);
             setAccessToken(token || "");
 
-            // Preload images trick from original code
             const imagesToLoad = Array.from(document.images)
                 .filter(img => !img.complete)
                 .map(img => new Promise(resolve => {
                     img.onload = img.onerror = resolve;
                 }));
             await Promise.all(imagesToLoad);
-            
+
             setTimeout(() => {
                 setIsLoaded(true);
             }, 100);
@@ -125,139 +173,142 @@ const ByList: React.FC = () => {
         fetchStatus();
     }, []);
 
+    // If we have recommendations, render the dashboard
+    if (enrichedRecommendations) {
+        return (
+            <div className="flex flex-col h-screen bg-linear-to-br from-[#02020f] to-[#122545] text-white overflow-hidden font-sans">
+                <Navbar color="#3db4f2" />
+                <div className="flex flex-1 overflow-hidden mt-[72px]">
+                    <div className="p-6">
+                        <FilterSidebar
+                            filters={filters}
+                            setFilters={setFilters}
+                            availableOptions={availableOptions}
+                        />
+                    </div>
+
+                    <FilteredRecommendationList
+                        recommendations={enrichedRecommendations}
+                        filters={filters}
+                        importedData={importedData}
+                    />
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#090311] to-[#141634] text-white bg-fixed">
-            <Navbar color="#a78bfa" />
+        <div className="min-h-screen bg-linear-to-br from-[#02020f] to-[#122545] text-white font-sans">
+            <Navbar color="#3db4f2" />
 
             <section className="bg-transparent relative text-white overflow-hidden">
-                <div className="relative z-10 flex flex-col-reverse lg:flex-row items-center justify-between px-6 sm:px-10 lg:px-27 pt-24 lg:pt-36 pb-5 gap-1">
-                    
-                    <div className={`text-left w-full max-w-3xl transition-opacity duration-500 ${isLoaded ? 'animate-fade-in-top opacity-100' : 'opacity-0'}`}>
-                        <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-6">
-                            <span className="text-purple-300 text-3xl sm:text-4xl font-black font-newtegomin">
-                                Recommendation using your lists
-                            </span>
+                <div className="relative z-10 flex flex-col-reverse lg:flex-row items-center justify-between px-6 sm:px-10 lg:px-27 pt-24 lg:pt-36 pb-5 gap-1 max-w-[1400px] mx-auto">
+
+                    <div className={`text-left w-full max-w-3xl transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+                        <h1 className="text-3xl sm:text-4xl font-bold leading-tight mb-4 text-[#9fadbd]">
+                            Recommendations
                         </h1>
 
-                        <p className="text-white/70 text-lg sm:text-lg mb-6 font-mono leading-relaxed">
-                            Import your anime lists from AniList or MyAnimeList to receive personalized recommendations based on the genres you watch most, how you've rated them, and more. 
+                        <p className="text-[#8ba0b2] text-base sm:text-lg mb-8 leading-relaxed max-w-2xl">
+                            Import your anime lists from AniList or MyAnimeList to receive personalized recommendations based on your unique tastes.
                         </p>
 
-                        {/* Login status */}
                         {isLoggedIn ? (
                             <>
-                                <div className="flex items-center mb-4 text-green-400 font-mono gap-2">
-                                    <SVG name="checkmark" size="w-5 h-5" />
-                                    <span>You are already logged in via</span>
+                                <div className="flex items-center mb-6 text-green-400 font-semibold gap-2 bg-[#151f2e] w-max px-4 py-2 rounded-md shadow-sm">
+                                    <SVG name="checkmark" size="w-4 h-4" />
+                                    <span>Logged in via</span>
                                     {loginType === "AniList" ? (
-                                        <SVG name="anilist" size="w-4.5 h-4.5" />
+                                        <SVG name="anilist" size="w-4 h-4" />
                                     ) : loginType === "MyAnimeList" ? (
-                                        <SVG name="mal" size="w-8 h-8" />
+                                        <SVG name="mal" size="w-6 h-6" />
                                     ) : null}
                                 </div>
-                                <div className="flex flex-row gap-3">
+                                <div className="flex flex-row gap-3 flex-wrap">
                                     {!importSuccess ? (
-                                        <button 
-                                            onClick={handleListImport} 
-                                            className="px-4 py-[8.5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2"
+                                        <button
+                                            onClick={handleListImport}
+                                            className="px-5 py-2.5 bg-[#3db4f2] hover:bg-[#3db4f2]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm"
                                             disabled={isImporting}
                                         >
                                             {isImporting ? (
                                                 <>
-                                                    <SVG name="loader" size="w-5 h-5" className="animate-spin" />
+                                                    <SVG name="loader" size="w-4 h-4" className="animate-spin" />
                                                     Importing...
                                                 </>
                                             ) : (
                                                 <>
-                                                    <SVG name="import" size="w-5 h-5" />
+                                                    <SVG name="import" size="w-4 h-4" />
                                                     Import Lists
                                                 </>
                                             )}
                                         </button>
                                     ) : (
                                         <div className="flex items-center gap-3">
-                                            <button 
+                                            <button
                                                 onClick={handleRecommend}
                                                 disabled={isRecommending}
-                                                className="px-4 py-[8.5px] bg-green-400/30 hover:bg-green-400/40 rounded-lg text-white font-mono flex items-center gap-2"
+                                                className="px-5 py-2.5 bg-[#3db4f2] hover:bg-[#3db4f2]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm"
                                             >
                                                 {isRecommending ? (
                                                     <>
-                                                        <SVG name="loader" size="w-5 h-5" className="animate-spin" />
+                                                        <SVG name="loader" size="w-4 h-4" className="animate-spin" />
                                                         Generating...
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <SVG name="star" size="w-5 h-5" />
+                                                        <SVG name="star" size="w-4 h-4" />
                                                         Recommend
                                                     </>
                                                 )}
                                             </button>
-                                            <label className="flex items-center gap-2 font-mono text-sm text-gray-300 cursor-pointer">
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={excludeWatched} 
-                                                    onChange={(e) => setExcludeWatched(e.target.checked)} 
-                                                    className="accent-purple-400 w-4 h-4 rounded"
-                                                />
-                                                Exclude watched
-                                            </label>
                                         </div>
                                     )}
-                                    <button onClick={logout} className="px-4 py-[8.5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2" >
-                                        <SVG name="logout" size="w-5 h-5" />
+                                    <button onClick={logout} className="px-5 py-2.5 bg-[#151f2e] hover:bg-[#1f293d] rounded-md text-[#9fadbd] hover:text-white font-semibold flex items-center gap-2 transition-colors shadow-sm" >
+                                        <SVG name="logout" size="w-4 h-4" />
                                         Logout
                                     </button>
                                 </div>
-                                {importError && <p className="mt-3 text-red-400 font-mono">{importError}</p>}
+                                {importError && <p className="mt-4 text-red-400 font-medium">{importError}</p>}
                                 {importSuccess && importedData && (
-                                    <div className="mt-3 p-3 bg-white/10 rounded-lg font-mono text-sm max-h-[150px] overflow-y-auto text-white overflow-x-auto">
-                                        <p className="mb-2 text-green-400">Imported Lists:</p>
-                                        <p className="mb-2 text-green-400"> - Anime completed: {importedData.completed.length}</p>
-                                        <p className="mb-2 text-green-400"> - Anime watching: {importedData.current.length}</p>
-                                        <p className="mb-2 text-green-400"> - Anime planned: {importedData.planning.length}</p>
-                                        <pre className="whitespace-pre-wrap break-all" dangerouslySetInnerHTML={{ __html: syntaxHighlightJson(JSON.stringify(importedData, null, 2)) }}></pre>
+                                    <div className="mt-6 p-5 bg-[#151f2e] rounded-md text-sm max-h-[200px] overflow-y-auto text-[#8ba0b2] overflow-x-auto shadow-sm">
+                                        <p className="mb-2 text-[#9fadbd] font-bold">Imported Lists Successfully:</p>
+                                        <p className="mb-1"> • Completed: {importedData.completed?.length || 0}</p>
+                                        <p className="mb-1"> • Watching: {importedData.current?.length || 0}</p>
+                                        <p className="mb-1"> • Planned: {importedData.planning?.length || 0}</p>
                                     </div>
                                 )}
-                                {recommendError && <p className="mt-3 text-red-400 font-mono">{recommendError}</p>}
-                                {recommendations && (
-                                    <div className="mt-8 w-full">
-                                        <h2 className="text-2xl font-bold font-mono mb-4 text-purple-300">Your Recommendations</h2>
-                                        <RecommendationGrid recommendations={recommendations} />
-                                    </div>
-                                )}
+                                {recommendError && <p className="mt-4 text-red-400 font-medium">{recommendError}</p>}
                             </>
                         ) : (
                             <>
-                                <div className="flex items-center mb-4 text-red-400 font-mono">
-                                    <SVG name="cross" size="w-5 h-5" />
+                                <div className="flex items-center mb-6 text-red-400 font-semibold bg-[#151f2e] w-max px-4 py-2 rounded-md shadow-sm">
+                                    <SVG name="cross" size="w-4 h-4" />
                                     <span className="ml-2">You are not logged in</span>
                                 </div>
-                                <div className="flex flex-row gap-3">
-                                    <button onClick={() => OAuth("AniList")} className="px-4 py-[5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2">
-                                        Connect with <SVG name="anilist" size="w-4.5 h-4.5" />
+                                <div className="flex flex-row gap-4">
+                                    <button onClick={() => OAuth("AniList")} className="px-5 py-2.5 bg-[#3db4f2] hover:bg-[#3db4f2]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm">
+                                        Login with <SVG name="anilist" size="w-4 h-4" />
                                     </button>
-                                    <button onClick={() => OAuth("MyAnimeList")} className="px-4 py-[5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2">
-                                        Connect with <SVG name="mal" size="w-8 h-8" />
+                                    <button onClick={() => OAuth("MyAnimeList")} className="px-5 py-2.5 bg-[#2e51a2] hover:bg-[#2e51a2]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm">
+                                        Login with <SVG name="mal" size="w-6 h-6" />
                                     </button>
                                 </div>
                             </>
                         )}
                     </div>
-                    
-                    {!importSuccess && !importedData && !recommendations && (
+
+                    {!importSuccess && !importedData && !enrichedRecommendations && (
                         <div className="flex-shrink-0">
-                            {/* Mobile image */}
                             <img
                                 src="/img2.png"
                                 alt="img2"
-                                className={`block lg:hidden w-[350px] sm:w-[350px] lg:w-[320px] h-auto drop-shadow-2xl rounded-lg transition-opacity duration-500 mb-3 ${isLoaded ? 'animate-fade-in-top opacity-100' : 'opacity-0'}`}
+                                className={`block lg:hidden w-[350px] sm:w-[350px] lg:w-[320px] h-auto drop-shadow-xl rounded-md transition-opacity duration-500 mb-3 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                             />
-                            {/* Desktop image */}
                             <img
                                 src="/img3.png"
                                 alt="img3"
-                                className={`hidden lg:block w-[260px] sm:w-[300px] lg:w-[320px] h-auto drop-shadow-2xl rounded-lg transition-opacity duration-500 ml-3 ${isLoaded ? 'animate-fade-in-bottom opacity-100' : 'opacity-0'}`}
+                                className={`hidden lg:block w-[260px] sm:w-[300px] lg:w-[320px] h-auto drop-shadow-xl rounded-md transition-opacity duration-500 ml-3 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                             />
                         </div>
                     )}

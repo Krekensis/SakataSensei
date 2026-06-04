@@ -93,7 +93,7 @@ def normalize_rating(score, user_mean, user_std):
 def process_request(predict_fn, corpus_ids, request_data):
     entries = request_data.get('entries', [])
     exclude_watched = request_data.get('exclude_watched', True)
-    top_k = request_data.get('top_k', 20)
+    top_k = request_data.get('top_k', 500)
     logit_weight = request_data.get('logit_weight', 0.3)
 
     corpus_id_to_idx = {aid: idx for idx, aid in enumerate(corpus_ids)}

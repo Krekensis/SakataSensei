@@ -22,7 +22,7 @@ const Home: React.FC = () => {
     return (
         <>
             <Navbar />
-            <section className="min-h-screen bg-linear-to-br from-[#02020f] to-[#132d3f] relative text-white overflow-hidden">
+            <section className="min-h-screen bg-linear-to-br from-[#02020f] to-[#122545] relative text-white overflow-hidden">
                 <div className="relative z-10 flex flex-col-reverse lg:flex-row items-center justify-between px-6 sm:px-10 lg:px-27 pt-24 lg:pt-30 pb-5 gap-1">
                     <div className={`text-left w-full max-w-3xl transition-opacity duration-500 ${isLoaded ? 'animate-fade-in-top opacity-100' : 'opacity-0'}`}>
                         <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-6">
