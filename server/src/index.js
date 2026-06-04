@@ -23,6 +23,6 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+    console.log(`Server listening on port ${PORT} | http://localhost:${PORT}`);
 });
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=index.js.ma

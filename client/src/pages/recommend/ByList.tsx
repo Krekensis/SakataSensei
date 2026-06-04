@@ -3,6 +3,7 @@ import Navbar from '../../components/Navbar';
 import SVG from '../../components/SVG';
 import { importAnimeList } from '../../utils/importAnimeList';
 import { OAuth } from '../../utils/OAuth';
+import RecommendationGrid from '../../components/RecommendationGrid';
 
 const ByList: React.FC = () => {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -14,6 +15,11 @@ const ByList: React.FC = () => {
     const [importSuccess, setImportSuccess] = useState(false);
     const [importError, setImportError] = useState('');
     const [importedData, setImportedData] = useState<any>(null);
+
+    const [isRecommending, setIsRecommending] = useState(false);
+    const [recommendations, setRecommendations] = useState<any[] | null>(null);
+    const [excludeWatched, setExcludeWatched] = useState(true);
+    const [recommendError, setRecommendError] = useState('');
 
     const handleListImport = async () => {
         if (!isLoggedIn) {
@@ -37,12 +43,37 @@ const ByList: React.FC = () => {
         }
     };
 
+    const handleRecommend = async () => {
+        setIsRecommending(true);
+        setRecommendError("");
+        try {
+            const res = await fetch('/api/recommend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ importedData, excludeWatched })
+            });
+            
+            if (!res.ok) {
+                throw new Error("Failed to get recommendations");
+            }
+            
+            const data = await res.json();
+            setRecommendations(data);
+        } catch (error) {
+            console.error(error);
+            setRecommendError("Failed to fetch recommendations. Please try again.");
+        } finally {
+            setIsRecommending(false);
+        }
+    };
+
     const logout = async () => {
         await fetch('/auth/logout', { method: 'POST' });
         setIsLoggedIn(false);
         setLoginType('none');
         setImportSuccess(false);
         setImportedData(null);
+        setRecommendations(null);
     };
 
     const syntaxHighlightJson = (json: string): string => {
@@ -144,10 +175,34 @@ const ByList: React.FC = () => {
                                             )}
                                         </button>
                                     ) : (
-                                        <button className="px-4 py-[8.5px] bg-green-400/30 hover:bg-green-400/40 rounded-lg text-white font-mono flex items-center gap-2">
-                                            <SVG name="star" size="w-5 h-5" />
-                                            Recommend
-                                        </button>
+                                        <div className="flex items-center gap-3">
+                                            <button 
+                                                onClick={handleRecommend}
+                                                disabled={isRecommending}
+                                                className="px-4 py-[8.5px] bg-green-400/30 hover:bg-green-400/40 rounded-lg text-white font-mono flex items-center gap-2"
+                                            >
+                                                {isRecommending ? (
+                                                    <>
+                                                        <SVG name="loader" size="w-5 h-5" className="animate-spin" />
+                                                        Generating...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <SVG name="star" size="w-5 h-5" />
+                                                        Recommend
+                                                    </>
+                                                )}
+                                            </button>
+                                            <label className="flex items-center gap-2 font-mono text-sm text-gray-300 cursor-pointer">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={excludeWatched} 
+                                                    onChange={(e) => setExcludeWatched(e.target.checked)} 
+                                                    className="accent-purple-400 w-4 h-4 rounded"
+                                                />
+                                                Exclude watched
+                                            </label>
+                                        </div>
                                     )}
                                     <button onClick={logout} className="px-4 py-[8.5px] bg-purple-400/30 hover:bg-purple-400/40 rounded-lg text-white font-mono flex items-center gap-2" >
                                         <SVG name="logout" size="w-5 h-5" />
@@ -162,6 +217,13 @@ const ByList: React.FC = () => {
                                         <p className="mb-2 text-green-400"> - Anime watching: {importedData.current.length}</p>
                                         <p className="mb-2 text-green-400"> - Anime planned: {importedData.planning.length}</p>
                                         <pre className="whitespace-pre-wrap break-all" dangerouslySetInnerHTML={{ __html: syntaxHighlightJson(JSON.stringify(importedData, null, 2)) }}></pre>
+                                    </div>
+                                )}
+                                {recommendError && <p className="mt-3 text-red-400 font-mono">{recommendError}</p>}
+                                {recommendations && (
+                                    <div className="mt-8 w-full">
+                                        <h2 className="text-2xl font-bold font-mono mb-4 text-purple-300">Your Recommendations</h2>
+                                        <RecommendationGrid recommendations={recommendations} />
                                     </div>
                                 )}
                             </>
@@ -183,7 +245,7 @@ const ByList: React.FC = () => {
                         )}
                     </div>
                     
-                    {!importSuccess && !importedData && (
+                    {!importSuccess && !importedData && !recommendations && (
                         <div className="flex-shrink-0">
                             {/* Mobile image */}
                             <img

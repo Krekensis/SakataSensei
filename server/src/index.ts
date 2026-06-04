@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import apiRoutes from './routes/api.js';
+import recommendRoutes from './routes/recommend.js';
 
 dotenv.config({ path: '../.env' }); // Load from root if needed, or specify
 
@@ -18,13 +19,14 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 
 // Routes
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
+app.use('/api/recommend', recommendRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

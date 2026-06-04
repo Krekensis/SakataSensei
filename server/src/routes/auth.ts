@@ -68,7 +68,7 @@ router.get('/mal-redirect', (req, res) => {
     const redirectUri = process.env.VITE_MYANIMELIST_REDIRECT_URI;
 
     const codeVerifier = generateCodeVerifier();
-    const codeChallenge = codeVerifier; 
+    const codeChallenge = codeVerifier;
 
     res.cookie("mal_code_verifier", codeVerifier, {
         httpOnly: true,
@@ -132,8 +132,9 @@ router.get('/mal', async (req, res) => {
         let data: any;
         try {
             data = JSON.parse(responseText);
-        } catch (e) {
-            return res.redirect(302, `${frontendUrl}/error?message=Invalid+response+from+MAL`);
+        } catch (e: any) {
+            const errorMessage = e.message || "Invalid response from MAL";
+            return res.redirect(302, `${frontendUrl}/error?message=${encodeURIComponent(errorMessage)}`);
         }
 
         if (!fetchRes.ok) {
@@ -170,14 +171,14 @@ router.get('/status', (req, res) => {
     let token: string | undefined;
     loginType = Boolean(anilistToken) ? 'AniList' : Boolean(malToken) ? 'MyAnimeList' : 'none';
 
-    if(loginType !== 'none') {
+    if (loginType !== 'none') {
         if (loginType === 'MyAnimeList') {
             token = malToken;
         } else if (loginType === 'AniList') {
             token = anilistToken;
         }
     }
-    
+
     return res.json({
         isLoggedIn: Boolean(anilistToken) || Boolean(malToken),
         accessToken: token || null,

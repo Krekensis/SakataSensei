@@ -1,0 +1,456 @@
+{
+  "data": {
+    "Media": {
+      "id": 16498,
+      "idMal": 16498,
+      "title": {
+        "romaji": "Shingeki no Kyojin",
+        "english": "Attack on Titan",
+        "native": "進撃の巨人"
+      },
+      "description": "Several hundred years ago, humans were nearly exterminated by titans. Titans are typically several stories tall, seem to have no intelligence, devour human beings and, worst of all, seem to do it for the pleasure rather than as a food source. A small percentage of humanity survived by walling themselves in a city protected by extremely high walls, even taller than the biggest of titans.<br><br>\r\nFlash forward to the present and the city has not seen a titan in over 100 years. Teenage boy Eren and his foster sister Mikasa witness something horrific as the city walls are destroyed by a colossal titan that appears out of thin air. As the smaller titans flood the city, the two kids watch in horror as their mother is eaten alive. Eren vows that he will murder every single titan and take revenge for all of mankind.<br><br>\r\n(Source: MangaHelpers) ",
+      "format": "TV",
+      "status": "FINISHED",
+      "startDate": {
+        "year": 2013,
+        "month": 4,
+        "day": 7
+      },
+      "endDate": {
+        "year": 2013,
+        "month": 9,
+        "day": 28
+      },
+      "season": "SPRING",
+      "seasonYear": 2013,
+      "episodes": 25,
+      "duration": 24,
+      "countryOfOrigin": "JP",
+      "isLicensed": true,
+      "source": "MANGA",
+      "trailer": {
+        "id": "LHtdKWJdif4\t",
+        "site": "youtube",
+        "thumbnail": "https://i.ytimg.com/vi/LHtdKWJdif4\t/hqdefault.jpg"
+      },
+      "coverImage": {
+        "extraLarge": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-buvcRTBx4NSm.jpg",
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx16498-buvcRTBx4NSm.jpg",
+        "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx16498-buvcRTBx4NSm.jpg",
+        "color": "#f1a143"
+      },
+      "bannerImage": "https://s4.anilist.co/file/anilistcdn/media/anime/banner/16498-8jpFCOcDmneX.jpg",
+      "genres": [
+        "Action",
+        "Drama",
+        "Fantasy",
+        "Mystery"
+      ],
+      "synonyms": [
+        "SnK",
+        "AoT",
+        "Ataque a los Titanes",
+        "Ataque dos Titãs",
+        "L'Attacco dei Giganti",
+        "מתקפת הטיטאנים",
+        "进击的巨人",
+        "L’Attaque des Titans",
+        "الهجوم على العمالقة",
+        "ผ่าพิภพไททัน",
+        "حمله به تایتان",
+        "Ataque de Titãs",
+        "Atak Tytanów",
+        "Атака титанов"
+      ],
+      "averageScore": 85,
+      "meanScore": 85,
+      "popularity": 1005845,
+      "isAdult": false,
+      "tags": [
+        {
+          "name": "Kaiju",
+          "description": "Prominently features giant monsters.",
+          "category": "Theme-Fantasy",
+          "rank": 93,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Revenge",
+          "description": "Prominently features a character who aims to exact punishment in a resentful or vindictive manner.",
+          "category": "Theme-Drama",
+          "rank": 92,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Tragedy",
+          "description": "Centers around tragic events and unhappy endings.",
+          "category": "Theme-Drama",
+          "rank": 88,
+          "isMediaSpoiler": true,
+          "isGeneralSpoiler": true
+        },
+        {
+          "name": "Military",
+          "description": "Centered around the life and activities of military personnel.",
+          "category": "Theme-Other-Organisations",
+          "rank": 88,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Primarily Teen Cast",
+          "description": "Main cast is mostly composed of teen characters.",
+          "category": "Cast-Main Cast",
+          "rank": 85,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Post-Apocalyptic",
+          "description": "Partly or completely set in a world or civilization after a global disaster.",
+          "category": "Setting-Universe",
+          "rank": 84,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Male Protagonist",
+          "description": "Main character is male.",
+          "category": "Cast-Main Cast",
+          "rank": 83,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Super Power",
+          "description": "Prominently features characters with special abilities that allow them to do what would normally be physically or logically impossible.",
+          "category": "Theme-Fantasy",
+          "rank": 80,
+          "isMediaSpoiler": true,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Henshin",
+          "description": "Prominently features character or costume transformations which often grant special abilities.",
+          "category": "Theme-Fantasy",
+          "rank": 79,
+          "isMediaSpoiler": true,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Gore",
+          "description": "Prominently features graphic bloodshed and violence.",
+          "category": "Theme-Other",
+          "rank": 76,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Memory Manipulation",
+          "description": "Prominently features a character(s) who has had their memories altered.",
+          "category": "Theme-Other",
+          "rank": 76,
+          "isMediaSpoiler": true,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Dystopian",
+          "description": "Partly or completely set in a society characterized by poverty, squalor or oppression.",
+          "category": "Setting-Time",
+          "rank": 75,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Swordplay",
+          "description": "Prominently features the use of swords in combat.",
+          "category": "Theme-Action",
+          "rank": 75,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Survival",
+          "description": "Centers around the struggle to live in spite of extreme obstacles.",
+          "category": "Theme-Other",
+          "rank": 73,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Steampunk",
+          "description": "Prominently features technology and designs inspired by 19th-century industrial steam-powered machinery.",
+          "category": "Theme-Fantasy",
+          "rank": 73,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Ensemble Cast",
+          "description": "Features a large cast of characters with (almost) equal screen time and importance to the plot.",
+          "category": "Cast-Main Cast",
+          "rank": 73,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Vore",
+          "description": "Features a character being swallowed or swallowing another creature whole.",
+          "category": "Sexual Content",
+          "rank": 72,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Orphan",
+          "description": "Prominently features a character that is an orphan.",
+          "category": "Cast-Traits",
+          "rank": 72,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Cannibalism",
+          "description": "Prominently features the act of consuming another member of the same species as food.",
+          "category": "Theme-Other",
+          "rank": 69,
+          "isMediaSpoiler": true,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Espionage",
+          "description": "Prominently features characters infiltrating an organization in order to steal sensitive information.",
+          "category": "Theme-Action",
+          "rank": 68,
+          "isMediaSpoiler": true,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Shounen",
+          "description": "Target demographic is teenage and young adult males.",
+          "category": "Demographic",
+          "rank": 62,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Time Skip",
+          "description": "Features a gap in time used to advance the story.",
+          "category": "Setting-Time",
+          "rank": 60,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": true
+        },
+        {
+          "name": "Kuudere",
+          "description": "Prominently features a character who generally retains a cold, blunt and cynical exterior, but once one gets to know them, they have a very warm and loving interior.",
+          "category": "Cast-Traits",
+          "rank": 60,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Coming of Age",
+          "description": "Centers around a character's transition from childhood to adulthood.",
+          "category": "Theme-Drama",
+          "rank": 60,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Amnesia",
+          "description": "Prominently features a character(s) with memory loss.",
+          "category": "Cast-Traits",
+          "rank": 60,
+          "isMediaSpoiler": true,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Suicide",
+          "description": "The act or an instance of taking or attempting to take one's own life voluntarily and intentionally.",
+          "category": "Theme-Drama",
+          "rank": 54,
+          "isMediaSpoiler": true,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Rural",
+          "description": "Partly or completely set in the countryside.",
+          "category": "Setting-Scene",
+          "rank": 50,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Medieval",
+          "description": "Partially or completely set in the Middle Ages or a Middle Ages-inspired setting. Commonly features elements such as European castles and knights.",
+          "category": "Setting-Time",
+          "rank": 40,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Adoption",
+          "description": "Features a character who has been adopted by someone who is neither of their biological parents.",
+          "category": "Theme-Other",
+          "rank": 33,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        },
+        {
+          "name": "Primarily Male Cast",
+          "description": "Main cast is mostly composed of male characters.",
+          "category": "Cast-Main Cast",
+          "rank": 32,
+          "isMediaSpoiler": false,
+          "isGeneralSpoiler": false
+        }
+      ],
+      "relations": {
+        "edges": [
+          {
+            "relationType": "ADAPTATION",
+            "node": {
+              "id": 53390,
+              "idMal": 23390,
+              "type": "MANGA",
+              "format": "MANGA",
+              "title": {
+                "romaji": "Shingeki no Kyojin"
+              }
+            }
+          },
+          {
+            "relationType": "ALTERNATIVE",
+            "node": {
+              "id": 20691,
+              "idMal": 23775,
+              "type": "ANIME",
+              "format": "MOVIE",
+              "title": {
+                "romaji": "Shingeki no Kyojin Zenpen: Guren no Yumiya"
+              }
+            }
+          },
+          {
+            "relationType": "ALTERNATIVE",
+            "node": {
+              "id": 20692,
+              "idMal": 23777,
+              "type": "ANIME",
+              "format": "MOVIE",
+              "title": {
+                "romaji": "Shingeki no Kyojin Kouhen: Jiyuu no Tsubasa"
+              }
+            }
+          },
+          {
+            "relationType": "SEQUEL",
+            "node": {
+              "id": 20958,
+              "idMal": 25777,
+              "type": "ANIME",
+              "format": "TV",
+              "title": {
+                "romaji": "Shingeki no Kyojin Season 2"
+              }
+            }
+          },
+          {
+            "relationType": "SPIN_OFF",
+            "node": {
+              "id": 21281,
+              "idMal": 31374,
+              "type": "ANIME",
+              "format": "TV",
+              "title": {
+                "romaji": "Shingeki! Kyojin Chuugakkou"
+              }
+            }
+          },
+          {
+            "relationType": "SIDE_STORY",
+            "node": {
+              "id": 18397,
+              "idMal": 18397,
+              "type": "ANIME",
+              "format": "OVA",
+              "title": {
+                "romaji": "Shingeki no Kyojin OVA"
+              }
+            }
+          },
+          {
+            "relationType": "SUMMARY",
+            "node": {
+              "id": 119113,
+              "idMal": 42091,
+              "type": "ANIME",
+              "format": "MOVIE",
+              "title": {
+                "romaji": "Shingeki no Kyojin: Chronicle"
+              }
+            }
+          },
+          {
+            "relationType": "PREQUEL",
+            "node": {
+              "id": 20811,
+              "idMal": 25781,
+              "type": "ANIME",
+              "format": "OVA",
+              "title": {
+                "romaji": "Shingeki no Kyojin Gaiden: Kuinaki Sentaku"
+              }
+            }
+          },
+          {
+            "relationType": "SIDE_STORY",
+            "node": {
+              "id": 99634,
+              "idMal": 36106,
+              "type": "ANIME",
+              "format": "OVA",
+              "title": {
+                "romaji": "Shingeki no Kyojin: LOST GIRLS"
+              }
+            }
+          },
+          {
+            "relationType": "OTHER",
+            "node": {
+              "id": 19391,
+              "idMal": 19391,
+              "type": "ANIME",
+              "format": "SPECIAL",
+              "title": {
+                "romaji": "Shingeki no Kyojin: Chimi Kyara Gekijou - Tondeke! Kunren Heidan"
+              }
+            }
+          },
+          {
+            "relationType": "CHARACTER",
+            "node": {
+              "id": 143391,
+              "idMal": 43413,
+              "type": "ANIME",
+              "format": "ONA",
+              "title": {
+                "romaji": "Chiyuki no Fashion Check"
+              }
+            }
+          }
+        ]
+      },
+      "studios": {
+        "nodes": [
+          {
+            "name": "WIT STUDIO"
+          }
+        ]
+      }
+    }
+  }
+}
