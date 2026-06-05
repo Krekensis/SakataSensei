@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import fetch from 'node-fetch';
 import type { ChildProcessWithoutNullStreams } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -24,7 +25,13 @@ class InferenceManager {
     private buffer: string = '';
 
     constructor() {
-        this.initProcess();
+        if (process.env.HF_INFERENCE_URL) {
+            console.log(`Using Hugging Face inference API at: ${process.env.HF_INFERENCE_URL}`);
+            this.isReady = true;
+        } else {
+            console.log('HF_INFERENCE_URL not provided, falling back to local Python subprocess.');
+            this.initProcess();
+        }
     }
 
     private initProcess() {
@@ -89,6 +96,31 @@ class InferenceManager {
     }
 
     public async getRecommendations(entries: any[], excludeWatched: boolean): Promise<{ id: number, score: number }[]> {
+        if (process.env.HF_INFERENCE_URL) {
+            // Use Hugging Face API
+            try {
+                const response = await fetch(`${process.env.HF_INFERENCE_URL}/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        entries,
+                        exclude_watched: excludeWatched
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HF API error: ${response.statusText}`);
+                }
+
+                const data = await response.json() as any;
+                return data.recommendations;
+            } catch (err) {
+                console.error('Failed to fetch from HF API:', err);
+                throw new Error('Inference API is currently unavailable.');
+            }
+        }
+
+        // Fallback to local python process
         if (!this.isReady || !this.pythonProcess) {
             throw new Error('Inference model is not ready yet. Please try again in a few moments.');
         }
