@@ -41,14 +41,14 @@ const GridCumListIcon = () => (
     </svg>
 );
 
-const FilteredRecommendationList: React.FC<Props> = ({ recommendations, filters, importedData }) => {
+const Recommendations: React.FC<Props> = ({ recommendations, filters, importedData }) => {
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'grid-cum-list'>('grid');
     const [currentPage, setCurrentPage] = useState(1);
 
     const userListIds = useMemo(() => {
         if (!importedData) return new Set<number>();
         const ids = new Set<number>();
-        ['completed', 'current', 'planning'].forEach(status => {
+        ['completed', 'current', 'planning', 'dropped', 'onHold'].forEach(status => {
             if (Array.isArray(importedData[status])) {
                 importedData[status].forEach((item: any) => ids.add(item.id));
             }
@@ -213,7 +213,7 @@ const FilteredRecommendationList: React.FC<Props> = ({ recommendations, filters,
                         ) : viewMode === 'list' ? (
                             <div className="flex flex-col gap-5">
                                 {currentItems.map((anime) => (
-                                    <ListCard key={anime.idMal} anime={anime} />
+                                    <ListCard key={anime.idMal} anime={anime} importedData={importedData} />
                                 ))}
                             </div>
                         ) : (
@@ -232,4 +232,4 @@ const FilteredRecommendationList: React.FC<Props> = ({ recommendations, filters,
     );
 };
 
-export default FilteredRecommendationList;
+export default Recommendations;

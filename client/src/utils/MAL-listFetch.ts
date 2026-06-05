@@ -17,12 +17,15 @@ interface AnimeEntry {
     studios: string[];
     tags: string[];
     source: string;
+    isAdult: boolean;
 }
 
 interface ImportResult {
     completed: AnimeEntry[];
     current: AnimeEntry[];
     planning: AnimeEntry[];
+    dropped: AnimeEntry[];
+    onHold: AnimeEntry[];
     userScoreFormat: string;
     totalEntries: number;
 }
@@ -31,6 +34,8 @@ export async function fetchMALList(token: string): Promise<ImportResult> {
         completed: [],
         current: [],
         planning: [],
+        dropped: [],
+        onHold: [],
         userScoreFormat: "POINT_10",
         totalEntries: 0
     };
@@ -69,6 +74,8 @@ export async function fetchMALList(token: string): Promise<ImportResult> {
                         status === "COMPLETED" ? "COMPLETED" :
                         status === "WATCHING" ? "CURRENT" :
                         status === "PLAN_TO_WATCH" ? "PLANNING" :
+                        status === "DROPPED" ? "DROPPED" :
+                        status === "ON_HOLD" ? "PAUSED" :
                         "OTHER",
                     format: anime.media_type || "UNKNOWN",
                     episodes: anime.num_episodes || null,
@@ -78,12 +85,15 @@ export async function fetchMALList(token: string): Promise<ImportResult> {
                     members: anime.num_list_users || 0,
                     studios: anime.studios?.map((s: any) => s.name) || [],
                     tags: [],
-                    source: anime.source || "UNKNOWN"
+                    source: anime.source || "UNKNOWN",
+                    isAdult: anime.rating === "rx" || anime.rating === "r+" || (anime.genres?.some((g: any) => g.name.toLowerCase() === 'hentai' || g.name.toLowerCase() === 'erotica')) || false
                 };
 
                 if (mapped.status === "COMPLETED") result.completed.push(mapped);
                 else if (mapped.status === "CURRENT") result.current.push(mapped);
                 else if (mapped.status === "PLANNING") result.planning.push(mapped);
+                else if (mapped.status === "DROPPED") result.dropped.push(mapped);
+                else if (mapped.status === "PAUSED") result.onHold.push(mapped);
 
                 result.totalEntries++;
             }

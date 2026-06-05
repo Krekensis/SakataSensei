@@ -80,7 +80,29 @@ def init_model(model_path, corpus_path):
     def predict(x):
         return model.apply({"params": params}, x, training=False)
 
-    return predict, corpus_ids
+    @jax.jit
+    def get_all_scores(x, logit_weight=0.3):
+        x_batched = jnp.expand_dims(x, 0)
+        item_logits, rating_pred, _, _ = model.apply({"params": params}, x_batched, training=False)
+        logits_1d = item_logits[0]
+        preds_1d = rating_pred[0]
+        
+        norm_logits = (logits_1d - jnp.mean(logits_1d)) / (jnp.std(logits_1d) + 1e-6)
+        norm_ratings = (preds_1d - jnp.mean(preds_1d)) / (jnp.std(preds_1d) + 1e-6)
+        combined_score = (logit_weight * norm_logits) + ((1.0 - logit_weight) * norm_ratings)
+        return combined_score
+
+    vmap_forward_fn = jax.jit(jax.vmap(get_all_scores, in_axes=(0, None)))
+
+    # Warmup JAX JIT compilation so it doesn't timeout on the first request
+    try:
+        predict(dummy_input)
+        dummy_batch = jnp.zeros((500, CORPUS_SIZE * 2))
+        vmap_forward_fn(dummy_batch, 0.3)
+    except Exception as e:
+        pass
+
+    return predict, corpus_ids, vmap_forward_fn
 
 def normalize_rating(score, user_mean, user_std):
     if score == 0:
@@ -90,7 +112,7 @@ def normalize_rating(score, user_mean, user_std):
     alpha = np.clip(user_std / 2.6, 0.3, 0.8)
     return np.clip(alpha * z_score + (1.0 - alpha) * abs_score, -2.5, 2.5)
 
-def process_request(predict_fn, corpus_ids, request_data):
+def process_request(predict_fn, corpus_ids, vmap_forward_fn, request_data):
     entries = request_data.get('entries', [])
     exclude_watched = request_data.get('exclude_watched', True)
     top_k = request_data.get('top_k', 500)
@@ -105,13 +127,14 @@ def process_request(predict_fn, corpus_ids, request_data):
     for entry in entries:
         mal_id = entry.get('id')
         score = entry.get('score', 0)
+        status = entry.get('status', 'completed')
         # Handle 100-point scales from AniList just in case
         if score > 10:
             score = score / 10.0
             
         if mal_id in corpus_id_to_idx:
             idx = corpus_id_to_idx[mal_id]
-            mapped_entries.append({'idx': idx, 'score': score})
+            mapped_entries.append({'idx': idx, 'score': score, 'status': status})
             if score > 0:
                 rated_scores.append(score)
 
@@ -125,8 +148,14 @@ def process_request(predict_fn, corpus_ids, request_data):
     for me in mapped_entries:
         idx = me['idx']
         score = me['score']
+        status = me['status']
         presence_vec[idx] = 1.0
-        rating_vec[idx] = normalize_rating(score, user_mean, user_std)
+        
+        if status == 'dropped' and score == 0:
+            # Apply severe negative penalty for unrated dropped items
+            rating_vec[idx] = normalize_rating(user_mean - 1.5 * user_std, user_mean, user_std)
+        else:
+            rating_vec[idx] = normalize_rating(score, user_mean, user_std)
 
     x_in = np.concatenate([presence_vec, rating_vec])
     x_in = jnp.expand_dims(jnp.array(x_in), 0)
@@ -149,14 +178,90 @@ def process_request(predict_fn, corpus_ids, request_data):
     top_indices = jnp.argsort(combined_score)[-top_k:][::-1]
     top_scores = combined_score[top_indices]
 
+    user_indices = np.array([me['idx'] for me in mapped_entries])
+    
+    # Determine which items are valid candidates for "Because you liked"
+    valid_reason_mask = np.array([
+        (me['status'] not in ['dropped', 'planning', 'paused']) and (me['score'] >= user_mean or me['score'] == 0)
+        for me in mapped_entries
+    ])
+    
+    valid_indices = user_indices[valid_reason_mask]
+    
     recs = []
-    for idx, score in zip(top_indices, top_scores):
-        if score == -jnp.inf:
-            continue
-        recs.append({
-            "id": int(corpus_ids[int(idx)]),
-            "score": float(score)
-        })
+    if len(valid_indices) > 0:
+        MAX_HOLDOUTS = 500
+        
+        # If user has more than 500 valid items, just take the top 500 rated ones
+        if len(valid_indices) > MAX_HOLDOUTS:
+            valid_scores = np.array([me['score'] for me in mapped_entries])[valid_reason_mask]
+            top_valid_args = np.argsort(valid_scores)[-MAX_HOLDOUTS:]
+            valid_indices = valid_indices[top_valid_args]
+            
+        actual_holdout_count = len(valid_indices)
+        
+        # Pad to exactly MAX_HOLDOUTS to prevent JAX recompilation
+        if actual_holdout_count < MAX_HOLDOUTS:
+            pad_count = MAX_HOLDOUTS - actual_holdout_count
+            padded_indices = np.pad(valid_indices, (0, pad_count), mode='constant', constant_values=0)
+        else:
+            padded_indices = valid_indices
+            
+        # Create holdout batch of shape (MAX_HOLDOUTS, CORPUS_SIZE * 2)
+        x_batch = jnp.tile(x_in[0], (MAX_HOLDOUTS, 1))
+        batch_indices = jnp.arange(MAX_HOLDOUTS)
+        
+        # Zero out the presence and rating for the held-out items
+        x_batch = x_batch.at[batch_indices, padded_indices].set(0.0)
+        x_batch = x_batch.at[batch_indices, padded_indices + CORPUS_SIZE].set(0.0)
+        
+        # Run batched forward pass: shape (MAX_HOLDOUTS, CORPUS_SIZE)
+        holdout_scores = vmap_forward_fn(x_batch, logit_weight)
+        
+        # Get holdout scores for the top recommended items: shape (MAX_HOLDOUTS, top_k)
+        ho_scores_for_top_k = holdout_scores[:, top_indices]
+        
+        # Calculate drops: baseline is (top_k,) -> broadcast to (MAX_HOLDOUTS, top_k)
+        drops = top_scores[None, :] - ho_scores_for_top_k
+        
+        # Transpose drops to (top_k, MAX_HOLDOUTS)
+        drops_t = drops.T
+        
+        # Nullify drops for the padded dummy rows so they are never selected
+        if actual_holdout_count < MAX_HOLDOUTS:
+            drops_t = drops_t.at[:, actual_holdout_count:].set(-jnp.inf)
+        
+        for i, (idx, score) in enumerate(zip(top_indices, top_scores)):
+            if score == -jnp.inf:
+                continue
+            
+            drops_for_rec = drops_t[i]
+            sorted_args = jnp.argsort(drops_for_rec)[::-1]
+            
+            reasons = []
+            for arg_idx in sorted_args:
+                if len(reasons) >= 3:
+                    break
+                
+                # Only include if holding out the item dropped the score
+                if drops_for_rec[arg_idx] > 0:
+                    # Map the padded index back to the corpus ID
+                    reasons.append(int(corpus_ids[int(padded_indices[arg_idx])]))
+            
+            recs.append({
+                "id": int(corpus_ids[int(idx)]),
+                "score": float(score),
+                "reasons": reasons
+            })
+    else:
+        for idx, score in zip(top_indices, top_scores):
+            if score == -jnp.inf:
+                continue
+            recs.append({
+                "id": int(corpus_ids[int(idx)]),
+                "score": float(score),
+                "reasons": []
+            })
 
     return {"recommendations": recs}
 
@@ -166,7 +271,7 @@ def main():
     corpus_path = os.path.join(base_dir, 'models', 'corpus_mapping_v2.json')
 
     try:
-        predict_fn, corpus_ids = init_model(model_path, corpus_path)
+        predict_fn, corpus_ids, vmap_forward_fn = init_model(model_path, corpus_path)
         # Print ready signal to stdout so Node knows we're initialized
         print(json.dumps({"status": "ready"}), flush=True)
     except Exception as e:
@@ -179,7 +284,7 @@ def main():
             continue
         try:
             req = json.loads(line)
-            res = process_request(predict_fn, corpus_ids, req)
+            res = process_request(predict_fn, corpus_ids, vmap_forward_fn, req)
             # Add an id to the response if the request had one, to match them
             if 'req_id' in req:
                 res['req_id'] = req['req_id']

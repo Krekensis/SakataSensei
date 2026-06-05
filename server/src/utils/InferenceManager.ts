@@ -13,7 +13,7 @@ interface RecommendationRequest {
 }
 
 interface RecommendationResponse {
-    recommendations?: { id: number, score: number }[];
+    recommendations?: { id: number, score: number, reasons?: number[] }[];
     error?: string;
 }
 
@@ -95,7 +95,7 @@ class InferenceManager {
         }
     }
 
-    public async getRecommendations(entries: any[], excludeWatched: boolean): Promise<{ id: number, score: number }[]> {
+    public async getRecommendations(entries: any[], excludeWatched: boolean): Promise<{ id: number, score: number, reasons?: number[] }[]> {
         if (process.env.HF_INFERENCE_URL) {
             // Use Hugging Face API
             try {

@@ -13,13 +13,14 @@ router.post('/', async (req, res) => {
         }
 
         const entries: any[] = [];
-        const lists = ['completed', 'current', 'planning'];
+        const lists = ['completed', 'current', 'dropped'];
         
         for (const listName of lists) {
             if (Array.isArray(importedData[listName])) {
                 entries.push(...importedData[listName].map((entry: any) => ({
                     id: entry.id,
-                    score: entry.score || 0
+                    score: entry.score || 0,
+                    status: listName
                 })));
             }
         }

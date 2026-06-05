@@ -8,7 +8,7 @@ interface AnimeEntry {
     scoreFormat: string;
     imageUrl?: string;
     bannerImageUrl?: string | null;
-    status: 'COMPLETED' | 'CURRENT' | 'PLANNING';
+    status: 'COMPLETED' | 'CURRENT' | 'PLANNING' | 'DROPPED' | 'PAUSED';
     format: string;
     episodes: number | null;
     year: number | null;
@@ -18,12 +18,15 @@ interface AnimeEntry {
     studios: string[];
     tags: string[];
     source: string;
+    isAdult: boolean;
 }
 
 interface ImportResult {
     completed: AnimeEntry[];
     current: AnimeEntry[];
     planning: AnimeEntry[];
+    dropped: AnimeEntry[];
+    onHold: AnimeEntry[];
     userScoreFormat: string;
     totalEntries: number;
 }
@@ -74,7 +77,7 @@ export async function fetchAniList(token: string, viewerId: string): Promise<Imp
                             name
                             mediaListOptions { scoreFormat }
                         }
-                        MediaListCollection(userId: ${viewerId}, type: ANIME, status_in: [COMPLETED, CURRENT, PLANNING]) {
+                        MediaListCollection(userId: ${viewerId}, type: ANIME, status_in: [COMPLETED, CURRENT, PLANNING, DROPPED, PAUSED]) {
                             lists {
                                 status
                                 entries {
@@ -111,6 +114,7 @@ export async function fetchAniList(token: string, viewerId: string): Promise<Imp
                                                 name
                                             }
                                         }
+                                        isAdult
                                     }
                                 }
                             }
@@ -153,6 +157,8 @@ export async function fetchAniList(token: string, viewerId: string): Promise<Imp
             completed: [],
             current: [],
             planning: [],
+            dropped: [],
+            onHold: [],
             userScoreFormat: viewer.mediaListOptions.scoreFormat,
             totalEntries: 0
         };
@@ -177,7 +183,8 @@ export async function fetchAniList(token: string, viewerId: string): Promise<Imp
                 members: entry.media.popularity || 0,
                 studios: entry.media.studios?.nodes?.map((studio: any) => studio.name) || [],
                 tags: entry.media.tags?.sort((a: any, b: any) => (b.rank ?? 0) - (a.rank ?? 0)).map((tag: any) => tag.name) || [],
-                source: entry.media.source
+                source: entry.media.source,
+                isAdult: entry.media.isAdult || false
             }));
 
             switch (list.status) {
@@ -189,6 +196,12 @@ export async function fetchAniList(token: string, viewerId: string): Promise<Imp
                     break;
                 case 'PLANNING':
                     result.planning = entries;
+                    break;
+                case 'DROPPED':
+                    result.dropped = entries;
+                    break;
+                case 'PAUSED':
+                    result.onHold = entries;
                     break;
             }
 

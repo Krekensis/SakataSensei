@@ -5,7 +5,7 @@ import { importAnimeList } from '../../utils/importAnimeList';
 import { OAuth } from '../../utils/OAuth';
 import { FilterSidebar, defaultFilters } from '../../components/FilterSidebar';
 import type { FilterState } from '../../components/FilterSidebar';
-import FilteredRecommendationList from '../../components/FilteredRecommendationList';
+import Recommendations from '../../components/Recommendations';
 import { fetchAniListBatch } from '../../utils/fetchAniListBatch';
 
 const ByList: React.FC = () => {
@@ -122,7 +122,7 @@ const ByList: React.FC = () => {
             // 3. Merge the ML scores into the enriched AniList data
             const enrichedWithScores = enriched.map(anime => {
                 const rawInfo = rawData.find((r: any) => r.id === anime.idMal);
-                return { ...anime, mlScore: rawInfo?.score || 0 };
+                return { ...anime, mlScore: rawInfo?.score || 0, reasons: rawInfo?.reasons || [] };
             });
 
             // 4. Sort by ML score descending just in case AniList scrambled the order
@@ -187,7 +187,7 @@ const ByList: React.FC = () => {
                         />
                     </div>
 
-                    <FilteredRecommendationList
+                    <Recommendations
                         recommendations={enrichedRecommendations}
                         filters={filters}
                         importedData={importedData}

@@ -13,6 +13,8 @@ export interface Anime {
   genres: string[];
   averageScore?: number;
   episodes?: number;
+  mlScore?: number;
+  reasons?: number[];
 }
 
 export interface UserAnimeListEntry {
