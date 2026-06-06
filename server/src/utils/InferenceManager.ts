@@ -95,7 +95,7 @@ class InferenceManager {
         }
     }
 
-    public async getRecommendations(entries: any[], excludeWatched: boolean): Promise<{ id: number, score: number, reasons?: number[] }[]> {
+    public async getRecommendations(entries: any[], excludeWatched: boolean, modelVersion: string = 'v2'): Promise<{ id: number, score: number, reasons?: number[] }[]> {
         if (process.env.HF_INFERENCE_URL) {
             // Use Hugging Face API
             try {
@@ -104,7 +104,8 @@ class InferenceManager {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         entries,
-                        exclude_watched: excludeWatched
+                        exclude_watched: excludeWatched,
+                        model_version: modelVersion
                     })
                 });
 
@@ -133,7 +134,8 @@ class InferenceManager {
             const request = {
                 req_id: reqId,
                 entries: entries,
-                exclude_watched: excludeWatched
+                exclude_watched: excludeWatched,
+                model_version: modelVersion
             };
             
             this.pythonProcess!.stdin.write(JSON.stringify(request) + '\n');

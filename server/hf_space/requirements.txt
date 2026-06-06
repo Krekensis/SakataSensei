@@ -6,3 +6,4 @@ jaxlib==0.4.20
 flax==0.7.5
 numpy==1.26.2
 msgpack==1.0.7
+huggingface_hub

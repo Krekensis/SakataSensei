@@ -7,7 +7,7 @@ interface AnimeEntry {
     scoreFormat: string;
     imageUrl?: string;
     bannerImageUrl?: null;
-    status: 'COMPLETED' | 'CURRENT' | 'PLANNING' | 'OTHER';
+    status: 'COMPLETED' | 'CURRENT' | 'PLANNING' | 'DROPPED' | 'PAUSED' | 'OTHER';
     format: string;
     episodes: number | null;
     year: number | null;

@@ -51,7 +51,14 @@ class Recommender(nn.Module):
         
         return item_logits, rating_pred, log_var_presence, log_var_rating
 
-def init_model(model_path, corpus_path):
+def init_model_version(version, base_dir):
+    model_path = os.path.join(base_dir, 'models', f'model_weights_{version}.msgpack')
+    corpus_path = os.path.join(base_dir, 'models', f'corpus_mapping_{version}.json')
+    
+    if not os.path.exists(model_path) or not os.path.exists(corpus_path):
+        print(f"Warning: Model files for {version} not found!")
+        return None
+
     # Load corpus mapping
     with open(corpus_path, 'r') as f:
         corpus_data = json.load(f)
@@ -112,7 +119,13 @@ def normalize_rating(score, user_mean, user_std):
     alpha = np.clip(user_std / 2.6, 0.3, 0.8)
     return np.clip(alpha * z_score + (1.0 - alpha) * abs_score, -2.5, 2.5)
 
-def process_request(predict_fn, corpus_ids, vmap_forward_fn, request_data):
+def process_request(models, request_data):
+    model_version = request_data.get('model_version', 'v2')
+    if model_version not in models or models[model_version] is None:
+        raise Exception(f"Model version {model_version} is not loaded.")
+        
+    predict_fn, corpus_ids, vmap_forward_fn = models[model_version]
+
     entries = request_data.get('entries', [])
     exclude_watched = request_data.get('exclude_watched', True)
     top_k = request_data.get('top_k', 500)
@@ -267,11 +280,15 @@ def process_request(predict_fn, corpus_ids, vmap_forward_fn, request_data):
 
 def main():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    model_path = os.path.join(base_dir, 'models', 'model_weights_v2.msgpack')
-    corpus_path = os.path.join(base_dir, 'models', 'corpus_mapping_v2.json')
 
+    models = {}
     try:
-        predict_fn, corpus_ids, vmap_forward_fn = init_model(model_path, corpus_path)
+        models['v2'] = init_model_version('v2', base_dir)
+        models['v3'] = init_model_version('v3', base_dir)
+        
+        if models['v2'] is None and models['v3'] is None:
+            raise Exception("No models found!")
+            
         # Print ready signal to stdout so Node knows we're initialized
         print(json.dumps({"status": "ready"}), flush=True)
     except Exception as e:
@@ -284,7 +301,7 @@ def main():
             continue
         try:
             req = json.loads(line)
-            res = process_request(predict_fn, corpus_ids, vmap_forward_fn, req)
+            res = process_request(models, req)
             # Add an id to the response if the request had one, to match them
             if 'req_id' in req:
                 res['req_id'] = req['req_id']

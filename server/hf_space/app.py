@@ -16,6 +16,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import warnings
 warnings.filterwarnings('ignore')
 
+try:
+    from huggingface_hub import hf_hub_download
+except ImportError:
+    hf_hub_download = None
+
 app = FastAPI()
 
 app.add_middleware(
@@ -79,8 +84,18 @@ def init_model_version(version: str):
     model_path = os.path.join(base_dir, f'model_weights_{version}.msgpack')
     corpus_path = os.path.join(base_dir, f'corpus_mapping_{version}.json')
 
+    # If running on HF Spaces and we have hf_hub_download available, try to fetch from Model Repo
+    repo_id = os.environ.get("HF_MODEL_REPO")
+    if repo_id and hf_hub_download:
+        print(f"Downloading {version} from Hugging Face Model Repo: {repo_id}...")
+        try:
+            model_path = hf_hub_download(repo_id=repo_id, filename=f'model_weights_{version}.msgpack')
+            corpus_path = hf_hub_download(repo_id=repo_id, filename=f'corpus_mapping_{version}.json')
+        except Exception as e:
+            print(f"Failed to download from Hub: {e}")
+
     if not os.path.exists(model_path) or not os.path.exists(corpus_path):
-        print(f"Warning: Model files for {version} not found! Ensure model_weights_{version}.msgpack and corpus_mapping_{version}.json are uploaded.")
+        print(f"Warning: Model files for {version} not found! Ensure model_weights_{version}.msgpack and corpus_mapping_{version}.json exist.")
         return None, None, None
 
     # Load corpus mapping

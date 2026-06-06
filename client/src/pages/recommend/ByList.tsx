@@ -21,6 +21,7 @@ const ByList: React.FC = () => {
 
     const [isRecommending, setIsRecommending] = useState(false);
     const [recommendError, setRecommendError] = useState('');
+    const [selectedModel, setSelectedModel] = useState<'v2' | 'v3'>('v2');
 
     // The enriched metadata from AniList
     const [enrichedRecommendations, setEnrichedRecommendations] = useState<any[] | null>(null);
@@ -93,7 +94,7 @@ const ByList: React.FC = () => {
         }
     };
 
-    const handleRecommend = async () => {
+    const handleRecommend = async (modelVersionToUse = selectedModel) => {
         setIsRecommending(true);
         setRecommendError("");
 
@@ -105,7 +106,7 @@ const ByList: React.FC = () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 // We always tell the backend to NOT exclude watched, because we want to handle that client-side
-                body: JSON.stringify({ importedData, excludeWatched: false })
+                body: JSON.stringify({ importedData, excludeWatched: false, modelVersion: modelVersionToUse })
             });
 
             if (!res.ok) {
@@ -147,7 +148,10 @@ const ByList: React.FC = () => {
         setEnrichedRecommendations(null);
     };
 
-
+    const handleModelChange = (newModel: 'v2' | 'v3') => {
+        setSelectedModel(newModel);
+        handleRecommend(newModel);
+    };
 
     useEffect(() => {
         const fetchStatus = async () => {
@@ -191,6 +195,8 @@ const ByList: React.FC = () => {
                         recommendations={enrichedRecommendations}
                         filters={filters}
                         importedData={importedData}
+                        selectedModel={selectedModel}
+                        onModelChange={handleModelChange}
                     />
                 </div>
             </div>
@@ -246,7 +252,7 @@ const ByList: React.FC = () => {
                                     ) : (
                                         <div className="flex items-center gap-3">
                                             <button
-                                                onClick={handleRecommend}
+                                                onClick={() => handleRecommend(selectedModel)}
                                                 disabled={isRecommending}
                                                 className="px-5 py-2.5 bg-[#3db4f2] hover:bg-[#3db4f2]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm"
                                             >

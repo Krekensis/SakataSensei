@@ -8,6 +8,8 @@ interface Props {
     recommendations: any[];
     filters: FilterState;
     importedData: any;
+    selectedModel: 'v2' | 'v3';
+    onModelChange: (model: 'v2' | 'v3') => void;
 }
 
 const GridIcon = () => (
@@ -41,7 +43,7 @@ const GridCumListIcon = () => (
     </svg>
 );
 
-const Recommendations: React.FC<Props> = ({ recommendations, filters, importedData }) => {
+const Recommendations: React.FC<Props> = ({ recommendations, filters, importedData, selectedModel, onModelChange }) => {
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'grid-cum-list'>('grid');
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -163,8 +165,18 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
                     <p className="text-[#8ba0b2] text-sm mt-1">Showing {filteredList.length} of {recommendations.length} anime</p>
                 </div>
 
-                <div className="flex items-center gap-1 bg-[#151f2e] p-1 rounded-md shadow-sm">
-                    <button
+                <div className="flex items-center gap-4">
+                    <select
+                        value={selectedModel}
+                        onChange={(e) => onModelChange(e.target.value as 'v2' | 'v3')}
+                        className="bg-[#151f2e] text-[#9fadbd] text-sm font-bold px-3 py-2.5 rounded-md outline-hidden shadow-sm hover:text-white transition-colors cursor-pointer"
+                    >
+                        <option value="v2">CF_DAE_V2</option>
+                        <option value="v3">CF_DAE_V3</option>
+                    </select>
+
+                    <div className="flex items-center gap-1 bg-[#151f2e] p-1 rounded-md shadow-sm">
+                        <button
                         onClick={() => { setViewMode('grid'); setCurrentPage(1); }}
                         className={`p-2 rounded ${viewMode === 'grid' ? 'bg-[#3db4f2] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
                         title="Grid View"
@@ -187,6 +199,7 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
                     </button>
                 </div>
             </div>
+        </div>
 
             <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
                 {filteredList.length === 0 ? (

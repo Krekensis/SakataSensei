@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post('/', async (req, res) => {
     try {
-        const { importedData, excludeWatched } = req.body;
+        const { importedData, excludeWatched, modelVersion } = req.body;
 
         if (!importedData) {
             return res.status(400).json({ error: 'Missing importedData' });
@@ -26,7 +26,7 @@ router.post('/', async (req, res) => {
         }
 
         // Get recommendations from Python ML model
-        const recommendations = await inferenceManager.getRecommendations(entries, excludeWatched !== false);
+        const recommendations = await inferenceManager.getRecommendations(entries, excludeWatched !== false, modelVersion || 'v2');
         
         if (!recommendations || recommendations.length === 0) {
             return res.json([]);
