@@ -25,11 +25,15 @@ class InferenceManager {
     private buffer: string = '';
 
     constructor() {
-        if (process.env.HF_INFERENCE_URL) {
-            console.log(`Using Hugging Face inference API at: ${process.env.HF_INFERENCE_URL}`);
+        if (process.env.HF_INFERENCE_URL_V2 || process.env.HF_INFERENCE_URL_V3) {
+            console.log(`Using Hugging Face inference API V2 at: ${process.env.HF_INFERENCE_URL_V2}`);
+            console.log(`Using Hugging Face inference API V3 at: ${process.env.HF_INFERENCE_URL_V3}`);
+            this.isReady = true;
+        } else if (process.env.HF_INFERENCE_URL) {
+            console.log(`Using single Hugging Face inference API at: ${process.env.HF_INFERENCE_URL}`);
             this.isReady = true;
         } else {
-            console.log('HF_INFERENCE_URL not provided, falling back to local Python subprocess.');
+            console.log('No HF_INFERENCE_URL provided, falling back to local Python subprocess.');
             this.initProcess();
         }
     }
@@ -96,10 +100,14 @@ class InferenceManager {
     }
 
     public async getRecommendations(entries: any[], excludeWatched: boolean, modelVersion: string = 'v2'): Promise<{ id: number, score: number, reasons?: number[] }[]> {
-        if (process.env.HF_INFERENCE_URL) {
+        const hfUrl = modelVersion === 'v3' 
+            ? (process.env.HF_INFERENCE_URL_V3 || process.env.HF_INFERENCE_URL)
+            : (process.env.HF_INFERENCE_URL_V2 || process.env.HF_INFERENCE_URL);
+
+        if (hfUrl) {
             // Use Hugging Face API
             try {
-                const response = await fetch(`${process.env.HF_INFERENCE_URL}/predict`, {
+                const response = await fetch(`${hfUrl}/predict`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

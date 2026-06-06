@@ -10,6 +10,7 @@ import { fetchAniListBatch } from '../../utils/fetchAniListBatch';
 
 const ByList: React.FC = () => {
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loginType, setLoginType] = useState('none');
     const [accessToken, setAccessToken] = useState('');
@@ -154,27 +155,29 @@ const ByList: React.FC = () => {
     };
 
     useEffect(() => {
-        const fetchStatus = async () => {
-            const status = await fetch('/auth/status', { credentials: 'include' });
-            const { isLoggedIn: logged, accessToken: token, loginType: type } = await status.json();
+        // Start auth check
+        fetch('/auth/status', { credentials: 'include' })
+            .then(res => res.json())
+            .then(data => {
+                setIsLoggedIn(data.isLoggedIn);
+                setLoginType(data.loginType);
+                setAccessToken(data.accessToken || "");
+            })
+            .catch(err => console.error("Auth check failed:", err))
+            .finally(() => setIsCheckingAuth(false));
 
-            setIsLoggedIn(logged);
-            setLoginType(type);
-            setAccessToken(token || "");
-
-            const imagesToLoad = Array.from(document.images)
-                .filter(img => !img.complete)
-                .map(img => new Promise(resolve => {
-                    img.onload = img.onerror = resolve;
-                }));
-            await Promise.all(imagesToLoad);
-
+        // Start image load check
+        const imagesToLoad = Array.from(document.images)
+            .filter(img => !img.complete)
+            .map(img => new Promise(resolve => {
+                img.onload = img.onerror = resolve;
+            }));
+        
+        Promise.all(imagesToLoad).then(() => {
             setTimeout(() => {
                 setIsLoaded(true);
             }, 100);
-        };
-
-        fetchStatus();
+        });
     }, []);
 
     // If we have recommendations, render the dashboard
@@ -219,7 +222,12 @@ const ByList: React.FC = () => {
                             Import your anime lists from AniList or MyAnimeList to receive personalized recommendations based on your unique tastes.
                         </p>
 
-                        {isLoggedIn ? (
+                        {isCheckingAuth ? (
+                            <div className="flex items-center gap-3 text-[#3db4f2] font-semibold bg-[#151f2e] w-max px-5 py-3 rounded-md shadow-sm">
+                                <SVG name="loader" size="w-5 h-5" className="animate-spin" />
+                                <span>Connecting to server... (Might take up to a minute if sleeping)</span>
+                            </div>
+                        ) : isLoggedIn ? (
                             <>
                                 <div className="flex items-center mb-6 text-green-400 font-semibold gap-2 bg-[#151f2e] w-max px-4 py-2 rounded-md shadow-sm">
                                     <SVG name="checkmark" size="w-4 h-4" />

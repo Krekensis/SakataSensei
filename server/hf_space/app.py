@@ -16,10 +16,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import warnings
 warnings.filterwarnings('ignore')
 
-try:
-    from huggingface_hub import hf_hub_download
-except ImportError:
-    hf_hub_download = None
+from huggingface_hub import hf_hub_download
 
 app = FastAPI()
 
@@ -86,7 +83,7 @@ def init_model_version(version: str):
 
     # If running on HF Spaces and we have hf_hub_download available, try to fetch from Model Repo
     repo_id = os.environ.get("HF_MODEL_REPO")
-    if repo_id and hf_hub_download:
+    if repo_id:
         print(f"Downloading {version} from Hugging Face Model Repo: {repo_id}...")
         try:
             model_path = hf_hub_download(repo_id=repo_id, filename=f'model_weights_{version}.msgpack')
@@ -150,8 +147,16 @@ def init_model_version(version: str):
 def init_models():
     global PREDICT_FN_V2, CORPUS_IDS_V2, VMAP_FORWARD_FN_V2
     global PREDICT_FN_V3, CORPUS_IDS_V3, VMAP_FORWARD_FN_V3
-    PREDICT_FN_V2, CORPUS_IDS_V2, VMAP_FORWARD_FN_V2 = init_model_version('v2')
-    PREDICT_FN_V3, CORPUS_IDS_V3, VMAP_FORWARD_FN_V3 = init_model_version('v3')
+    
+    model_to_load = os.environ.get("MODEL_TO_LOAD")
+    
+    if model_to_load == "v2" or not model_to_load:
+        print("Initializing V2 model...")
+        PREDICT_FN_V2, CORPUS_IDS_V2, VMAP_FORWARD_FN_V2 = init_model_version('v2')
+        
+    if model_to_load == "v3" or not model_to_load:
+        print("Initializing V3 model...")
+        PREDICT_FN_V3, CORPUS_IDS_V3, VMAP_FORWARD_FN_V3 = init_model_version('v3')
 
 def normalize_rating(score, user_mean, user_std):
     if score == 0:
