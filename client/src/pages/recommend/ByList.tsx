@@ -3,17 +3,15 @@ import Navbar from '../../components/Navbar';
 import SVG from '../../components/SVG';
 import { importAnimeList } from '../../utils/importAnimeList';
 import { OAuth } from '../../utils/OAuth';
+import { useAuth } from '../../context/AuthContext';
 import { FilterSidebar, defaultFilters } from '../../components/FilterSidebar';
 import type { FilterState } from '../../components/FilterSidebar';
 import Recommendations from '../../components/Recommendations';
 import { fetchAniListBatch } from '../../utils/fetchAniListBatch';
 
 const ByList: React.FC = () => {
+    const { isCheckingAuth, isLoggedIn, loginType, accessToken, logout } = useAuth();
     const [isLoaded, setIsLoaded] = useState(false);
-    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [loginType, setLoginType] = useState('none');
-    const [accessToken, setAccessToken] = useState('');
 
     const [isImporting, setIsImporting] = useState(false);
     const [importSuccess, setImportSuccess] = useState(false);
@@ -139,13 +137,10 @@ const ByList: React.FC = () => {
         }
     };
 
-    const logout = async () => {
-        await fetch('/auth/logout', { method: 'POST' });
-        setIsLoggedIn(false);
-        setLoginType('none');
+    const handleLogout = async () => {
+        await logout();
         setImportSuccess(false);
         setImportedData(null);
-
         setEnrichedRecommendations(null);
     };
 
@@ -155,24 +150,12 @@ const ByList: React.FC = () => {
     };
 
     useEffect(() => {
-        // Start auth check
-        fetch('/auth/status', { credentials: 'include' })
-            .then(res => res.json())
-            .then(data => {
-                setIsLoggedIn(data.isLoggedIn);
-                setLoginType(data.loginType);
-                setAccessToken(data.accessToken || "");
-            })
-            .catch(err => console.error("Auth check failed:", err))
-            .finally(() => setIsCheckingAuth(false));
-
-        // Start image load check
         const imagesToLoad = Array.from(document.images)
             .filter(img => !img.complete)
             .map(img => new Promise(resolve => {
                 img.onload = img.onerror = resolve;
             }));
-        
+
         Promise.all(imagesToLoad).then(() => {
             setTimeout(() => {
                 setIsLoaded(true);
@@ -184,7 +167,7 @@ const ByList: React.FC = () => {
     if (enrichedRecommendations) {
         return (
             <div className="flex flex-col h-screen bg-linear-to-br from-[#02020f] to-[#122545] text-white overflow-hidden font-sans">
-                <Navbar color="#3db4f2" />
+                <Navbar color="#60a5fa" />
                 <div className="flex flex-1 overflow-hidden mt-[72px]">
                     <div className="p-6">
                         <FilterSidebar
@@ -208,7 +191,7 @@ const ByList: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-linear-to-br from-[#02020f] to-[#122545] text-white font-sans">
-            <Navbar color="#3db4f2" />
+            <Navbar color="#60a5fa" />
 
             <section className="bg-transparent relative text-white overflow-hidden">
                 <div className="relative z-10 flex flex-col-reverse lg:flex-row items-center justify-between px-6 sm:px-10 lg:px-27 pt-24 lg:pt-36 pb-5 gap-1 max-w-[1400px] mx-auto">
@@ -223,7 +206,7 @@ const ByList: React.FC = () => {
                         </p>
 
                         {isCheckingAuth ? (
-                            <div className="flex items-center gap-3 text-[#3db4f2] font-semibold bg-[#151f2e] w-max px-5 py-3 rounded-md shadow-sm">
+                            <div className="flex items-center gap-3 text-[#60a5fa] font-semibold bg-[#151f2e] w-max px-5 py-3 rounded-md shadow-sm">
                                 <SVG name="loader" size="w-5 h-5" className="animate-spin" />
                                 <span>Connecting to server... (Might take up to a minute if sleeping)</span>
                             </div>
@@ -235,14 +218,14 @@ const ByList: React.FC = () => {
                                     {loginType === "AniList" ? (
                                         <SVG name="anilist" size="w-4 h-4" />
                                     ) : loginType === "MyAnimeList" ? (
-                                        <SVG name="mal" size="w-6 h-6" />
+                                        <SVG name="mal" size="w-7 h-7" />
                                     ) : null}
                                 </div>
                                 <div className="flex flex-row gap-3 flex-wrap">
                                     {!importSuccess ? (
                                         <button
                                             onClick={handleListImport}
-                                            className="px-5 py-2.5 bg-[#3db4f2] hover:bg-[#3db4f2]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm"
+                                            className="px-5 py-2.5 bg-[#60a5fa] hover:bg-[#60a5fa]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm"
                                             disabled={isImporting}
                                         >
                                             {isImporting ? (
@@ -262,7 +245,7 @@ const ByList: React.FC = () => {
                                             <button
                                                 onClick={() => handleRecommend(selectedModel)}
                                                 disabled={isRecommending}
-                                                className="px-5 py-2.5 bg-[#3db4f2] hover:bg-[#3db4f2]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm"
+                                                className="px-5 py-2.5 bg-[#60a5fa] hover:bg-[#60a5fa]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm"
                                             >
                                                 {isRecommending ? (
                                                     <>
@@ -278,7 +261,7 @@ const ByList: React.FC = () => {
                                             </button>
                                         </div>
                                     )}
-                                    <button onClick={logout} className="px-5 py-2.5 bg-[#151f2e] hover:bg-[#1f293d] rounded-md text-[#9fadbd] hover:text-white font-semibold flex items-center gap-2 transition-colors shadow-sm" >
+                                    <button onClick={handleLogout} className="px-5 py-2.5 bg-[#151f2e] hover:bg-[#1f293d] rounded-md text-[#9fadbd] hover:text-white font-semibold flex items-center gap-2 transition-colors shadow-sm" >
                                         <SVG name="logout" size="w-4 h-4" />
                                         Logout
                                     </button>
@@ -305,7 +288,7 @@ const ByList: React.FC = () => {
                                         Login with <SVG name="anilist" size="w-4 h-4" />
                                     </button>
                                     <button onClick={() => OAuth("MyAnimeList")} className="px-5 py-2.5 bg-[#2e51a2] hover:bg-[#2e51a2]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm">
-                                        Login with <SVG name="mal" size="w-6 h-6" />
+                                        Login with <SVG name="mal" size="w-7 h-7" />
                                     </button>
                                 </div>
                             </>

@@ -60,8 +60,8 @@ router.get('/mal/list', async (req, res) => {
     const baseUrl = "https://api.myanimelist.net/v2/users/@me/animelist";
     const fields = [
         "id", "title", "alternative_titles", "start_date", "num_episodes",
-        "num_list_users", "num_scoring_users", "media_type", "mean", 
-        "popularity", "studios", "genres", "status", "source", 
+        "num_list_users", "num_scoring_users", "media_type", "mean",
+        "popularity", "studios", "genres", "status", "source",
         "start_season", "average_episode_duration", "my_list_status"
     ].join(",");
 
@@ -78,9 +78,9 @@ router.get('/mal/list', async (req, res) => {
 
             if (!response.ok) {
                 const errText = await response.text();
-                return res.status(response.status).json({ 
-                    error: `MAL fetch failed: ${response.status}`, 
-                    details: errText 
+                return res.status(response.status).json({
+                    error: `MAL fetch failed: ${response.status}`,
+                    details: errText
                 });
             }
 
@@ -92,6 +92,51 @@ router.get('/mal/list', async (req, res) => {
         }
 
         return res.json({ entries: allEntries });
+    } catch (err: any) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// =======================
+// MAL LIST UPDATE (PROXY)
+// =======================
+router.post('/mal/update_status', async (req, res) => {
+    const token = req.headers.authorization;
+    if (!token) {
+        return res.status(401).json({ error: "Missing Authorization header" });
+    }
+
+    const { anime_id, status } = req.body;
+    if (!anime_id || !status) {
+        return res.status(400).json({ error: "Missing anime_id or status" });
+    }
+
+    const url = `https://api.myanimelist.net/v2/anime/${anime_id}/my_list_status`;
+
+    // MAL requires x-www-form-urlencoded for PATCH
+    const formData = new URLSearchParams();
+    formData.append('status', status);
+
+    try {
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                "Authorization": token, // Token already includes "Bearer ..."
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: formData.toString()
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            return res.status(response.status).json({
+                error: `MAL update failed: ${response.status}`,
+                details: errText
+            });
+        }
+
+        const data: any = await response.json();
+        return res.json({ success: true, data });
     } catch (err: any) {
         return res.status(500).json({ error: err.message });
     }

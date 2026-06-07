@@ -115,7 +115,7 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
         });
     }, [recommendations, filters, userListIds]);
 
-    const itemsPerPage = viewMode === 'grid' ? 36 : 15;
+    const itemsPerPage = viewMode === 'grid' ? 36 : viewMode === 'grid-cum-list' ? 30 : 15;
     const totalPages = Math.ceil(filteredList.length / itemsPerPage);
 
     if (currentPage > totalPages && totalPages > 0) {
@@ -177,29 +177,29 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
 
                     <div className="flex items-center gap-1 bg-[#151f2e] p-1 rounded-md shadow-sm">
                         <button
-                        onClick={() => { setViewMode('grid'); setCurrentPage(1); }}
-                        className={`p-2 rounded ${viewMode === 'grid' ? 'bg-[#3db4f2] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
-                        title="Grid View"
-                    >
-                        <GridIcon />
-                    </button>
-                    <button
-                        onClick={() => { setViewMode('grid-cum-list'); setCurrentPage(1); }}
-                        className={`p-2 rounded ${viewMode === 'grid-cum-list' ? 'bg-[#3db4f2] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
-                        title="Compact List View"
-                    >
-                        <GridCumListIcon />
-                    </button>
-                    <button
-                        onClick={() => { setViewMode('list'); setCurrentPage(1); }}
-                        className={`p-2 rounded ${viewMode === 'list' ? 'bg-[#3db4f2] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
-                        title="List View"
-                    >
-                        <ListIcon />
-                    </button>
+                            onClick={() => { setViewMode('grid'); setCurrentPage(1); }}
+                            className={`p-2 rounded ${viewMode === 'grid' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
+                            title="Grid View"
+                        >
+                            <GridIcon />
+                        </button>
+                        <button
+                            onClick={() => { setViewMode('grid-cum-list'); setCurrentPage(1); }}
+                            className={`p-2 rounded ${viewMode === 'grid-cum-list' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
+                            title="Compact List View"
+                        >
+                            <GridCumListIcon />
+                        </button>
+                        <button
+                            onClick={() => { setViewMode('list'); setCurrentPage(1); }}
+                            className={`p-2 rounded ${viewMode === 'list' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
+                            title="List View"
+                        >
+                            <ListIcon />
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
             <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
                 {filteredList.length === 0 ? (
@@ -220,7 +220,7 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
                         {viewMode === 'grid' ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10">
                                 {currentItems.map((anime) => (
-                                    <GridCard key={anime.idMal} anime={anime} />
+                                    <GridCard key={anime.idMal} anime={anime} importedData={importedData} />
                                 ))}
                             </div>
                         ) : viewMode === 'list' ? (
@@ -230,9 +230,9 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
                                 ))}
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-5">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
                                 {currentItems.map((anime) => (
-                                    <GridCumListCard key={anime.idMal} anime={anime} />
+                                    <GridCumListCard key={anime.idMal} anime={anime} importedData={importedData} />
                                 ))}
                             </div>
                         )}

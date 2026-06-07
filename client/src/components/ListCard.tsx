@@ -1,4 +1,5 @@
 import React from 'react';
+import StatusOverlay from './StatusOverlay';
 
 interface Props {
     anime: any;
@@ -35,8 +36,9 @@ const ListCard: React.FC<Props> = ({ anime, importedData }) => {
                 </>
             )}
 
-            <div className="w-[120px] sm:w-[135px] flex-shrink-0 relative h-full rounded shadow-sm overflow-hidden z-10">
+            <div className="w-[120px] sm:w-[135px] flex-shrink-0 relative h-full rounded shadow-sm overflow-hidden z-10 group/cover">
                 <img src={anime.coverImage?.large} alt={anime.title?.romaji} className="object-cover w-full h-full" loading="lazy" />
+                <StatusOverlay anime={anime} importedData={importedData} />
             </div>
 
             <div className="pl-5 py-2 pr-2 flex flex-row flex-1 relative z-10 overflow-hidden gap-4">
@@ -70,11 +72,6 @@ const ListCard: React.FC<Props> = ({ anime, importedData }) => {
                         </div>
 
                         <div className="flex flex-col items-start justify-center gap-2 flex-shrink-0 bg-[#151f2e]/50 backdrop-blur-xs px-3 py-2 rounded min-w-[85px]">
-                            {anime.score && (
-                                <div className="text-blue-400 text-sm font-bold flex items-center gap-2" title="AI Match Score">
-                                    <span className="leading-none pt-[1px]">{(anime.score).toFixed(1)} AI</span>
-                                </div>
-                            )}
                             {anime.averageScore && (
                                 <div className="text-[#9fadbd] text-sm font-bold flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0 -ml-[1.5px]" viewBox="0 0 24 24" fill="currentColor" style={{ color: anime.coverImage?.color || '#60a5fa' }}>

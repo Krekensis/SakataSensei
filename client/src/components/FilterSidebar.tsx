@@ -113,7 +113,7 @@ const MultiSelect = ({ label, options, selected, onChange }: { label: string, op
                             onClick={() => toggleOption(opt)}
                             className={`px-3 py-2.5 text-sm cursor-pointer transition-colors flex items-center gap-3 ${selected.includes(opt) ? 'bg-[#0b1622] text-white' : 'text-[#8ba0b2] hover:bg-[#0b1622] hover:text-white'}`}
                         >
-                            <input type="checkbox" checked={selected.includes(opt)} readOnly className="accent-[#3db4f2] w-3.5 h-3.5 rounded-sm" />
+                            <input type="checkbox" checked={selected.includes(opt)} readOnly className="accent-[#60a5fa] w-3.5 h-3.5 rounded-sm" />
                             {opt}
                         </div>
                     ))}
@@ -142,15 +142,15 @@ export const FilterSidebar: React.FC<Props> = ({ filters, setFilters, availableO
             {/* Toggles */}
             <div className="space-y-4 mb-8">
                 <label className="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" checked={filters.excludeList} onChange={() => handleToggle('excludeList')} className="accent-[#3db4f2] w-4 h-4 rounded-sm" />
+                    <input type="checkbox" checked={filters.excludeList} onChange={() => handleToggle('excludeList')} className="accent-[#60a5fa] w-4 h-4 rounded-sm" />
                     <span className="text-sm text-[#8ba0b2] group-hover:text-white transition-colors">Exclude anime on my list</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" checked={filters.excludeSequels} onChange={() => handleToggle('excludeSequels')} className="accent-[#3db4f2] w-4 h-4 rounded-sm" />
+                    <input type="checkbox" checked={filters.excludeSequels} onChange={() => handleToggle('excludeSequels')} className="accent-[#60a5fa] w-4 h-4 rounded-sm" />
                     <span className="text-sm text-[#8ba0b2] group-hover:text-white transition-colors">Exclude sequels of my list</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" checked={filters.excludeAdult} onChange={() => handleToggle('excludeAdult')} className="accent-[#3db4f2] w-4 h-4 rounded-sm" />
+                    <input type="checkbox" checked={filters.excludeAdult} onChange={() => handleToggle('excludeAdult')} className="accent-[#60a5fa] w-4 h-4 rounded-sm" />
                     <span className="text-sm text-[#8ba0b2] group-hover:text-white transition-colors">Exclude adult content (18+)</span>
                 </label>
             </div>
@@ -196,7 +196,7 @@ export const FilterSidebar: React.FC<Props> = ({ filters, setFilters, availableO
                     <Slider
                         range min={0} max={availableOptions.maxPop} step={1000}
                         value={filters.popularityRange} onChange={(v) => handleRange('popularityRange', v)}
-                        styles={{ track: { backgroundColor: '#3db4f2' }, handle: { borderColor: '#3db4f2', backgroundColor: '#fff', boxShadow: 'none' }, rail: { backgroundColor: '#0b1622' } }}
+                        styles={{ track: { backgroundColor: '#60a5fa' }, handle: { borderColor: '#60a5fa', backgroundColor: '#fff', boxShadow: 'none' }, rail: { backgroundColor: '#0b1622' } }}
                     />
                 </div>
 
@@ -210,7 +210,7 @@ export const FilterSidebar: React.FC<Props> = ({ filters, setFilters, availableO
                     <Slider
                         range min={0} max={100} step={1}
                         value={filters.scoreRange} onChange={(v) => handleRange('scoreRange', v)}
-                        styles={{ track: { backgroundColor: '#3db4f2' }, handle: { borderColor: '#3db4f2', backgroundColor: '#fff', boxShadow: 'none' }, rail: { backgroundColor: '#0b1622' } }}
+                        styles={{ track: { backgroundColor: '#60a5fa' }, handle: { borderColor: '#60a5fa', backgroundColor: '#fff', boxShadow: 'none' }, rail: { backgroundColor: '#0b1622' } }}
                     />
                 </div>
 
@@ -224,7 +224,7 @@ export const FilterSidebar: React.FC<Props> = ({ filters, setFilters, availableO
                     <Slider
                         range min={1940} max={2027} step={1}
                         value={filters.yearRange} onChange={(v) => handleRange('yearRange', v)}
-                        styles={{ track: { backgroundColor: '#3db4f2' }, handle: { borderColor: '#3db4f2', backgroundColor: '#fff', boxShadow: 'none' }, rail: { backgroundColor: '#0b1622' } }}
+                        styles={{ track: { backgroundColor: '#60a5fa' }, handle: { borderColor: '#60a5fa', backgroundColor: '#fff', boxShadow: 'none' }, rail: { backgroundColor: '#0b1622' } }}
                     />
                 </div>
             </div>

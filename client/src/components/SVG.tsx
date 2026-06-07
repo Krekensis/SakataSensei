@@ -4,6 +4,7 @@ interface SVGProps {
     name: string;
     size?: string;
     className?: string;
+    viewBox?: string;
 }
 
 const icons: Record<string, string> = {
@@ -21,7 +22,12 @@ const icons: Record<string, string> = {
     loader: `<path d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25" /> <path d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"/>`
 };
 
-const SVG: React.FC<SVGProps> = ({ name, size = "w-5 h-5", className = "" }) => {
+const viewBoxes: Record<string, string> = {
+    mal: "0 2 24 16",
+    anilist: "0 2 24 20"
+};
+
+const SVG: React.FC<SVGProps> = ({ name, size = "w-5 h-5", className = "", viewBox }) => {
     const iconPath = icons[name];
     const isFilled = ['anilist', 'mal', 'loader'].includes(name);
 
@@ -31,7 +37,7 @@ const SVG: React.FC<SVGProps> = ({ name, size = "w-5 h-5", className = "" }) => 
                 xmlns="http://www.w3.org/2000/svg" 
                 className={`${size} ${className}`} 
                 fill={isFilled ? "currentColor" : "none"}
-                viewBox="0 0 24 24" 
+                viewBox={viewBox || viewBoxes[name] || "0 0 24 24"} 
                 stroke={isFilled ? "none" : "currentColor"}
                 role="img"
                 strokeWidth={isFilled ? "0" : "2"}
