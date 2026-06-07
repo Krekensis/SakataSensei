@@ -40,10 +40,10 @@ class InferenceManager {
 
     private initProcess() {
         const scriptPath = path.join(__dirname, '..', '..', 'inference.py');
-        
+
         // Ensure python command is correct for Windows or Unix
         const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
-        
+
         console.log(`Starting Python inference process: ${pythonCmd} ${scriptPath}`);
         this.pythonProcess = spawn(pythonCmd, [scriptPath]);
 
@@ -84,7 +84,7 @@ class InferenceManager {
                 if (reqId !== undefined && this.requestQueue.has(reqId.toString())) {
                     const { resolve, reject } = this.requestQueue.get(reqId.toString())!;
                     this.requestQueue.delete(reqId.toString());
-                    
+
                     if (response.error) {
                         reject(new Error(response.error));
                     } else {
@@ -100,7 +100,7 @@ class InferenceManager {
     }
 
     public async getRecommendations(entries: any[], excludeWatched: boolean, modelVersion: string = 'v2'): Promise<{ id: number, score: number, reasons?: number[] }[]> {
-        const hfUrl = modelVersion === 'v3' 
+        const hfUrl = modelVersion === 'v3'
             ? (process.env.HF_INFERENCE_URL_V3 || process.env.HF_INFERENCE_URL)
             : (process.env.HF_INFERENCE_URL_V2 || process.env.HF_INFERENCE_URL);
 
@@ -118,43 +118,61 @@ class InferenceManager {
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HF API error: ${response.statusText}`);
+                    let errorMessage = `HF API error: ${response.statusText}`;
+                    let estimatedTime = null;
+                    try {
+                        const errData = await response.json() as any;
+                        if (errData.error) {
+                            errorMessage = errData.error;
+                        }
+                        if (errData.estimated_time !== undefined) {
+                            estimatedTime = errData.estimated_time;
+                        }
+                    } catch (e) {
+                        // Ignore JSON parse error if it's not JSON
+                    }
+                    const errorObj = new Error(errorMessage) as any;
+                    errorObj.estimatedTime = estimatedTime;
+                    throw errorObj;
                 }
 
                 const data = await response.json() as any;
                 return data.recommendations;
-            } catch (err) {
-                console.error('Failed to fetch from HF API:', err);
-                throw new Error('Inference API is currently unavailable.');
+            } catch (err: any) {
+                console.error('Failed to fetch from HF API:', err.message);
+                if (err.estimatedTime !== undefined) {
+                    throw err; // Re-throw the custom error object with estimatedTime
+                }
+                throw new Error('Recommendation API is currently unavailable.');
             }
         }
 
         // Fallback to local python process
         if (!this.isReady || !this.pythonProcess) {
-            throw new Error('Inference model is not ready yet. Please try again in a few moments.');
+            throw new Error('Recommendation model is not ready yet. Please try again in a few moments.');
         }
 
         const reqId = (this.reqIdCounter++).toString();
-        
+
         return new Promise((resolve, reject) => {
             this.requestQueue.set(reqId, { resolve, reject });
-            
+
             const request = {
                 req_id: reqId,
                 entries: entries,
                 exclude_watched: excludeWatched,
                 model_version: modelVersion
             };
-            
+
             this.pythonProcess!.stdin.write(JSON.stringify(request) + '\n');
-            
+
             // Timeout after 30 seconds
             setTimeout(() => {
                 if (this.requestQueue.has(reqId)) {
                     this.requestQueue.delete(reqId);
-                    reject(new Error('Inference request timed out after 30 seconds'));
+                    reject(new Error('Inference request timed out after 60 seconds'));
                 }
-            }, 30000);
+            }, 60000);
         });
     }
 }

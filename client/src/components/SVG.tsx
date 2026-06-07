@@ -5,6 +5,7 @@ interface SVGProps {
     size?: string;
     className?: string;
     viewBox?: string;
+    style?: React.CSSProperties;
 }
 
 const icons: Record<string, string> = {
@@ -27,15 +28,16 @@ const viewBoxes: Record<string, string> = {
     anilist: "0 2 24 20"
 };
 
-const SVG: React.FC<SVGProps> = ({ name, size = "w-5 h-5", className = "", viewBox }) => {
+const SVG: React.FC<SVGProps> = ({ name, size = "w-5 h-5", className = "", viewBox, style }) => {
     const iconPath = icons[name];
-    const isFilled = ['anilist', 'mal', 'loader'].includes(name);
+    const isFilled = ['anilist', 'mal', 'loader', 'star'].includes(name);
 
     if (iconPath) {
         return (
             <svg 
                 xmlns="http://www.w3.org/2000/svg" 
                 className={`${size} ${className}`} 
+                style={style}
                 fill={isFilled ? "currentColor" : "none"}
                 viewBox={viewBox || viewBoxes[name] || "0 0 24 24"} 
                 stroke={isFilled ? "none" : "currentColor"}

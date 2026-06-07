@@ -20,7 +20,12 @@ const ByList: React.FC = () => {
 
     const [isRecommending, setIsRecommending] = useState(false);
     const [recommendError, setRecommendError] = useState('');
+    const [estimatedWaitTime, setEstimatedWaitTime] = useState<number | null>(null);
     const [selectedModel, setSelectedModel] = useState<'v2' | 'v3'>('v2');
+    const [importProgress, setImportProgress] = useState(0);
+    const [importLog, setImportLog] = useState('');
+
+    const themeColor = loginType === 'AniList' ? '#3db4f2' : loginType === 'MyAnimeList' ? '#2e51a2' : '#60a5fa';
 
     // The enriched metadata from AniList
     const [enrichedRecommendations, setEnrichedRecommendations] = useState<any[] | null>(null);
@@ -80,15 +85,56 @@ const ByList: React.FC = () => {
         setIsImporting(true);
         setImportError("");
         setImportSuccess(false);
+        setImportProgress(0);
+        setImportLog("Connecting to server...");
 
         try {
             const data = await importAnimeList(loginType, accessToken);
-            setImportedData(data);
-            setImportSuccess(true);
+            setImportLog("List retrieved! Unpacking anime entries...");
+
+            // Visual simulation of parsing
+            const allEntries = [
+                ...(data.completed || []),
+                ...(data.planning || []),
+                ...(data.current || []),
+                ...(data.dropped || []),
+                ...(data.onHold || [])
+            ];
+
+            const total = allEntries.length;
+            if (total === 0) {
+                setImportedData(data);
+                setImportSuccess(true);
+                setIsImporting(false);
+                return;
+            }
+
+            let currentIndex = 0;
+            const batchSize = Math.max(1, Math.floor(total / 20)); // Aim for ~20 visual updates
+
+            const simulateParsing = setInterval(() => {
+                currentIndex += batchSize;
+
+                if (currentIndex >= total) {
+                    clearInterval(simulateParsing);
+                    setImportProgress(100);
+                    setImportLog("Import complete! Your list is ready.");
+                    setTimeout(() => {
+                        setImportedData(data);
+                        setImportSuccess(true);
+                        setIsImporting(false);
+                    }, 500); // Brief pause to show 100%
+                } else {
+                    const currentAnime = allEntries[currentIndex];
+                    const progress = Math.floor((currentIndex / total) * 100);
+                    setImportProgress(progress);
+                    setImportLog(`Analyzing: ${currentAnime?.englishTitle || currentAnime?.title || 'Unknown Anime'}...`);
+                }
+            }, 60); // 60ms delay per batch
+
         } catch (error) {
             console.error("Error importing anime list:", error);
             setImportError("Failed to import anime list. Please try again.");
-        } finally {
             setIsImporting(false);
         }
     };
@@ -109,7 +155,12 @@ const ByList: React.FC = () => {
             });
 
             if (!res.ok) {
-                throw new Error("Failed to get recommendations from backend");
+                const errData = await res.json();
+                const errorObj = new Error(errData.error || "Failed to get recommendations from backend") as any;
+                if (errData.estimatedTime !== undefined) {
+                    errorObj.estimatedTime = errData.estimatedTime;
+                }
+                throw errorObj;
             }
 
             const rawData = await res.json();
@@ -129,9 +180,14 @@ const ByList: React.FC = () => {
             enrichedWithScores.sort((a, b) => b.mlScore - a.mlScore);
 
             setEnrichedRecommendations(enrichedWithScores);
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            setRecommendError("Failed to fetch recommendations. Please try again.");
+            if (error.estimatedTime !== undefined && error.estimatedTime > 0) {
+                setEstimatedWaitTime(Math.ceil(error.estimatedTime));
+                setRecommendError(`The AI Model is currently waking up! It should be ready in roughly ${Math.ceil(error.estimatedTime)} seconds.`);
+            } else {
+                setRecommendError(error.message || "Failed to fetch recommendations. Please try again.");
+            }
         } finally {
             setIsRecommending(false);
         }
@@ -162,6 +218,23 @@ const ByList: React.FC = () => {
             }, 100);
         });
     }, []);
+
+    // Countdown timer for recommendation model wakeup
+    useEffect(() => {
+        if (estimatedWaitTime !== null && estimatedWaitTime > 0) {
+            const timer = setInterval(() => {
+                setEstimatedWaitTime(prev => {
+                    if (prev === null || prev <= 1) {
+                        clearInterval(timer);
+                        setRecommendError(''); // Clear error when ready
+                        return null;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+    }, [estimatedWaitTime]);
 
     // If we have recommendations, render the dashboard
     if (enrichedRecommendations) {
@@ -225,7 +298,8 @@ const ByList: React.FC = () => {
                                     {!importSuccess ? (
                                         <button
                                             onClick={handleListImport}
-                                            className="px-5 py-2.5 bg-[#60a5fa] hover:bg-[#60a5fa]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm"
+                                            className="px-5 py-2.5 rounded-md text-white font-semibold flex items-center gap-2 transition-all hover:opacity-90 shadow-sm"
+                                            style={{ backgroundColor: themeColor }}
                                             disabled={isImporting}
                                         >
                                             {isImporting ? (
@@ -245,7 +319,8 @@ const ByList: React.FC = () => {
                                             <button
                                                 onClick={() => handleRecommend(selectedModel)}
                                                 disabled={isRecommending}
-                                                className="px-5 py-2.5 bg-[#60a5fa] hover:bg-[#60a5fa]/90 rounded-md text-white font-semibold flex items-center gap-2 transition-colors shadow-sm"
+                                                className="px-5 py-2.5 rounded-md text-white font-semibold flex items-center gap-2 transition-all hover:opacity-90 shadow-sm"
+                                                style={{ backgroundColor: themeColor }}
                                             >
                                                 {isRecommending ? (
                                                     <>
@@ -267,15 +342,99 @@ const ByList: React.FC = () => {
                                     </button>
                                 </div>
                                 {importError && <p className="mt-4 text-red-400 font-medium">{importError}</p>}
-                                {importSuccess && importedData && (
-                                    <div className="mt-6 p-5 bg-[#151f2e] rounded-md text-sm max-h-[200px] overflow-y-auto text-[#8ba0b2] overflow-x-auto shadow-sm">
-                                        <p className="mb-2 text-[#9fadbd] font-bold">Imported Lists Successfully:</p>
-                                        <p className="mb-1"> • Completed: {importedData.completed?.length || 0}</p>
-                                        <p className="mb-1"> • Watching: {importedData.current?.length || 0}</p>
-                                        <p className="mb-1"> • Planned: {importedData.planning?.length || 0}</p>
+
+                                {/* Simulated Progress UI */}
+                                {isImporting && !importSuccess && (
+                                    <div className="mt-6 w-full max-w-md">
+                                        <div className="flex justify-between items-end mb-2">
+                                            <span className="text-sm font-semibold" style={{ color: themeColor }}>{importLog}</span>
+                                            <span className="text-sm font-bold text-[#8ba0b2]">{importProgress}%</span>
+                                        </div>
+                                        <div className="w-full bg-[#151f2e] rounded-full h-2 overflow-hidden shadow-inner">
+                                            <div
+                                                className="h-2 rounded-full transition-all duration-100 ease-linear shadow-sm"
+                                                style={{ width: `${importProgress}%`, backgroundColor: themeColor, boxShadow: `0 0 10px ${themeColor}` }}
+                                            ></div>
+                                        </div>
                                     </div>
                                 )}
-                                {recommendError && <p className="mt-4 text-red-400 font-medium">{recommendError}</p>}
+
+                                {importSuccess && importedData && (() => {
+                                    const all = [
+                                        ...(importedData.completed || []),
+                                        ...(importedData.current || []),
+                                        ...(importedData.dropped || []),
+                                        ...(importedData.onHold || []),
+                                        ...(importedData.planning || [])
+                                    ];
+                                    const scored = all.filter((a: any) => a.score > 0);
+                                    const avgScore = scored.length > 0 ? (scored.reduce((acc: number, curr: any) => acc + curr.score, 0) / scored.length).toFixed(1) : '0';
+
+                                    return (
+                                        <div className="mt-6 p-5 bg-[#151f2e]/80 backdrop-blur-sm rounded-lg text-sm max-h-[300px] overflow-y-auto text-[#8ba0b2] shadow-sm">
+                                            <p className="mb-3 font-bold text-base flex items-center gap-2">
+                                                Imported lists successfully
+                                            </p>
+
+                                            <div className="flex gap-3 mb-3">
+                                                <div className="flex-1 bg-[#0d1525]/80 p-3 rounded-md flex items-center justify-between">
+                                                    <p className="text-xs uppercase tracking-wider text-[#9fadbd]">Total Anime</p>
+                                                    <p className="text-xl font-bold text-white">{importedData.totalEntries || all.length}</p>
+                                                </div>
+                                                <div className="flex-1 bg-[#0d1525]/80 p-3 rounded-md flex items-center justify-between">
+                                                    <p className="text-xs uppercase tracking-wider text-[#9fadbd]">Average Score</p>
+                                                    <p className="text-xl font-bold text-white flex items-center gap-1.5">
+                                                        <SVG name="star" size="w-4 h-4" style={{ color: themeColor }} />
+                                                        {avgScore}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                                                <div className="bg-[#0d1525] p-3 rounded-md">
+                                                    <p className="text-[10px] uppercase tracking-wider mb-1 text-[#9fadbd]">Completed</p>
+                                                    <p className="text-base font-bold text-white">{importedData.completed?.length || 0}</p>
+                                                </div>
+                                                <div className="bg-[#0d1525] p-3 rounded-md">
+                                                    <p className="text-[10px] uppercase tracking-wider mb-1 text-[#9fadbd]">Watching</p>
+                                                    <p className="text-base font-bold text-white">{importedData.current?.length || 0}</p>
+                                                </div>
+                                                <div className="bg-[#0d1525] p-3 rounded-md">
+                                                    <p className="text-[10px] uppercase tracking-wider mb-1 text-[#9fadbd]">Planned</p>
+                                                    <p className="text-base font-bold text-white">{importedData.planning?.length || 0}</p>
+                                                </div>
+                                                <div className="bg-[#0d1525] p-3 rounded-md">
+                                                    <p className="text-[10px] uppercase tracking-wider mb-1 text-[#9fadbd]">Paused</p>
+                                                    <p className="text-base font-bold text-white">{importedData.onHold?.length || 0}</p>
+                                                </div>
+                                                <div className="bg-[#0d1525] p-3 rounded-md">
+                                                    <p className="text-[10px] uppercase tracking-wider mb-1 text-[#9fadbd]">Dropped</p>
+                                                    <p className="text-base font-bold text-white">{importedData.dropped?.length || 0}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {recommendError && !estimatedWaitTime && <p className="mt-4 text-red-400 font-medium">{recommendError}</p>}
+
+                                {estimatedWaitTime !== null && (
+                                    <div className="mt-6 p-4 border rounded-lg max-w-md" style={{ backgroundColor: `${themeColor}1A`, borderColor: `${themeColor}4D` }}>
+                                        <div className="flex items-start gap-3">
+                                            <SVG name="loader" size="w-5 h-5" className="animate-spin mt-0.5 shrink-0" style={{ color: themeColor }} />
+                                            <div>
+                                                <p className="font-bold mb-1" style={{ color: themeColor }}>AI Model is Waking Up!</p>
+                                                <p className="text-sm text-[#8ba0b2] mb-3">Our recommendation engine went to sleep. It will be ready to serve you in roughly <span className="text-white font-bold">{estimatedWaitTime}</span> seconds.</p>
+                                                <div className="w-full bg-[#151f2e] rounded-full h-1.5 overflow-hidden">
+                                                    <div
+                                                        className="h-1.5 rounded-full transition-all duration-1000 ease-linear"
+                                                        style={{ width: `${Math.max(0, 100 - (estimatedWaitTime * 2))}%`, backgroundColor: themeColor }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </>
                         ) : (
                             <>
@@ -295,20 +454,18 @@ const ByList: React.FC = () => {
                         )}
                     </div>
 
-                    {!importSuccess && !importedData && !enrichedRecommendations && (
-                        <div className="flex-shrink-0">
-                            <img
-                                src="/img2.png"
-                                alt="img2"
-                                className={`block lg:hidden w-[350px] sm:w-[350px] lg:w-[320px] h-auto drop-shadow-xl rounded-md transition-opacity duration-500 mb-3 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-                            />
-                            <img
-                                src="/img3.png"
-                                alt="img3"
-                                className={`hidden lg:block w-[260px] sm:w-[300px] lg:w-[320px] h-auto drop-shadow-xl rounded-md transition-opacity duration-500 ml-3 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-                            />
-                        </div>
-                    )}
+                    <div className="flex-shrink-0">
+                        <img
+                            src="/img2.png"
+                            alt="img2"
+                            className={`block lg:hidden w-[350px] sm:w-[350px] lg:w-[320px] h-auto drop-shadow-xl rounded-md transition-opacity duration-500 mb-3 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                        />
+                        <img
+                            src="/img3.png"
+                            alt="img3"
+                            className={`hidden lg:block w-[260px] sm:w-[300px] lg:w-[320px] h-auto drop-shadow-xl rounded-md transition-opacity duration-500 ml-3 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                        />
+                    </div>
                 </div>
             </section>
         </div>

@@ -37,8 +37,11 @@ router.post('/', async (req, res) => {
         // and the frontend handles the batch GraphQL fetching.
         res.json(recommendations);
     } catch (err: any) {
-        console.error('Error generating recommendations:', err);
-        res.status(500).json({ error: err.message || 'Internal server error' });
+        console.error('Error generating recommendations:', err.message);
+        res.status(500).json({ 
+            error: err.message || 'Internal server error',
+            estimatedTime: err.estimatedTime || null
+        });
     }
 });
 

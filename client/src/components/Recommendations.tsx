@@ -166,16 +166,24 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <select
-                        value={selectedModel}
-                        onChange={(e) => onModelChange(e.target.value as 'v2' | 'v3')}
-                        className="bg-[#151f2e] text-[#9fadbd] text-sm font-bold px-3 py-2.5 rounded-md outline-hidden shadow-sm hover:text-white transition-colors cursor-pointer"
-                    >
-                        <option value="v2">CF_DAE_V2</option>
-                        <option value="v3">CF_DAE_V3</option>
-                    </select>
+                    <div className="flex items-center gap-1 bg-[#151f2e]/60 p-1 rounded-md shadow-sm">
+                        <span className="text-xs uppercase tracking-wider font-bold text-[#8ba0b2] px-2">Model</span>
+                        <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
+                        <button
+                            onClick={() => onModelChange('v2')}
+                            className={`px-3 h-[34px] flex items-center justify-center text-sm font-bold rounded transition-colors ${selectedModel === 'v2' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'}`}
+                        >
+                            V2
+                        </button>
+                        <button
+                            onClick={() => onModelChange('v3')}
+                            className={`px-3 h-[34px] flex items-center justify-center text-sm font-bold rounded transition-colors ${selectedModel === 'v3' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'}`}
+                        >
+                            V3
+                        </button>
+                    </div>
 
-                    <div className="flex items-center gap-1 bg-[#151f2e] p-1 rounded-md shadow-sm">
+                    <div className="flex items-center gap-1 bg-[#151f2e]/60 p-1 rounded-md shadow-sm">
                         <button
                             onClick={() => { setViewMode('grid'); setCurrentPage(1); }}
                             className={`p-2 rounded ${viewMode === 'grid' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
@@ -213,7 +221,7 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
                             </svg>
                         </div>
                         <h3 className="text-lg font-bold text-[#9fadbd]">No anime match your filters</h3>
-                        <p className="text-[#8ba0b2] mt-2 text-sm">Try relaxing some of the sidebar constraints.</p>
+                        <p className="text-[#8ba0b2] mt-2 text-sm">Maybe stop being so picky and touch some grass.</p>
                     </div>
                 ) : (
                     <>
