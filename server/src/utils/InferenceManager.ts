@@ -100,9 +100,16 @@ class InferenceManager {
     }
 
     public async getRecommendations(entries: any[], excludeWatched: boolean, modelVersion: string = 'v2'): Promise<{ id: number, score: number, reasons?: number[] }[]> {
-        const hfUrl = modelVersion === 'v3'
-            ? (process.env.HF_INFERENCE_URL_V3 || process.env.HF_INFERENCE_URL)
-            : (process.env.HF_INFERENCE_URL_V2 || process.env.HF_INFERENCE_URL);
+        let hfUrl = process.env.HF_INFERENCE_URL;
+        if (modelVersion === 'v3') {
+            hfUrl = process.env.HF_INFERENCE_URL_V3 || hfUrl;
+        } else if (modelVersion === 'v4') {
+            hfUrl = process.env.HF_INFERENCE_URL_V4 || hfUrl;
+        } else if (modelVersion === 'content') {
+            hfUrl = process.env.HF_INFERENCE_URL_CONTENT || hfUrl;
+        } else {
+            hfUrl = process.env.HF_INFERENCE_URL_V2 || hfUrl;
+        }
 
         if (hfUrl) {
             // Use Hugging Face API

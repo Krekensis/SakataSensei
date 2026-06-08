@@ -8,8 +8,8 @@ interface Props {
     recommendations: any[];
     filters: FilterState;
     importedData: any;
-    selectedModel: 'v2' | 'v3';
-    onModelChange: (model: 'v2' | 'v3') => void;
+    selectedModel: 'v2' | 'v3' | 'v4' | 'content';
+    onModelChange: (model: 'v2' | 'v3' | 'v4' | 'content') => void;
 }
 
 const GridIcon = () => (
@@ -180,6 +180,18 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
                             className={`px-3 h-[34px] flex items-center justify-center text-sm font-bold rounded transition-colors ${selectedModel === 'v3' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'}`}
                         >
                             V3
+                        </button>
+                        <button
+                            onClick={() => onModelChange('v4')}
+                            className={`px-3 h-[34px] flex items-center justify-center text-sm font-bold rounded transition-colors ${selectedModel === 'v4' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'}`}
+                        >
+                            V4 (Hybrid)
+                        </button>
+                        <button
+                            onClick={() => onModelChange('content')}
+                            className={`px-3 h-[34px] flex items-center justify-center text-sm font-bold rounded transition-colors ${selectedModel === 'content' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'}`}
+                        >
+                            Content AE
                         </button>
                     </div>
 

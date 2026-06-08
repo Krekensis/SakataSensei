@@ -21,7 +21,7 @@ const ByList: React.FC = () => {
     const [isRecommending, setIsRecommending] = useState(false);
     const [recommendError, setRecommendError] = useState('');
     const [estimatedWaitTime, setEstimatedWaitTime] = useState<number | null>(null);
-    const [selectedModel, setSelectedModel] = useState<'v2' | 'v3'>('v2');
+    const [selectedModel, setSelectedModel] = useState<'v2' | 'v3' | 'v4' | 'content'>('v2');
     const [importProgress, setImportProgress] = useState(0);
     const [importLog, setImportLog] = useState('');
 
@@ -200,7 +200,7 @@ const ByList: React.FC = () => {
         setEnrichedRecommendations(null);
     };
 
-    const handleModelChange = (newModel: 'v2' | 'v3') => {
+    const handleModelChange = (newModel: 'v2' | 'v3' | 'v4' | 'content') => {
         setSelectedModel(newModel);
         handleRecommend(newModel);
     };
@@ -384,7 +384,6 @@ const ByList: React.FC = () => {
                                                 <div className="flex-1 bg-[#0d1525]/80 p-3 rounded-md flex items-center justify-between">
                                                     <p className="text-xs uppercase tracking-wider text-[#9fadbd]">Average Score</p>
                                                     <p className="text-xl font-bold text-white flex items-center gap-1.5">
-                                                        <SVG name="star" size="w-4 h-4" style={{ color: themeColor }} />
                                                         {avgScore}
                                                     </p>
                                                 </div>
