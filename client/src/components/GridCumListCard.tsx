@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+
 import SVG from './SVG';
 import StatusOverlay from './StatusOverlay';
 import { formatAbbreviateNumber } from '../utils/numberFormatting';
@@ -12,15 +12,12 @@ interface Props {
 
 const GridCumListCard: React.FC<Props> = ({ anime, importedData }) => {
     const { loginType } = useAuth();
-    const coverUrl = anime.coverImage?.extraLarge || anime.coverImage?.large || anime.coverImage?.medium;
+
     const linkUrl = loginType === 'AniList' ? `https://anilist.co/anime/${anime.id}` : `https://myanimelist.net/anime/${anime.idMal}`;
     const mainColor = anime.coverImage?.color || '#60a5fa';
 
     return (
-        <a 
-            href={linkUrl}
-            target="_blank" 
-            rel="noreferrer"
+        <div 
             className="flex relative rounded-xl overflow-hidden bg-[#11161d]/80 backdrop-blur-md p-3 sm:p-4 gap-3 sm:gap-5 transition-transform hover:scale-[1.02] shadow-lg h-[220px] sm:h-[310px]"
         >
             {/* Left Column */}
@@ -55,7 +52,7 @@ const GridCumListCard: React.FC<Props> = ({ anime, importedData }) => {
             {/* Right Column */}
             <div className="flex flex-col flex-1 py-1 min-w-0 min-h-0">
                 <a
-                    href={`https://myanimelist.net/anime/${anime.idMal}`}
+                    href={linkUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="hover:underline decoration-2 underline-offset-2 shrink-0"
@@ -131,7 +128,7 @@ const GridCumListCard: React.FC<Props> = ({ anime, importedData }) => {
                         ))}
                 </div>
             </div>
-        </a>
+        </div>
     );
 };
 

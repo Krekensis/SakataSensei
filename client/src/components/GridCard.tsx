@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+
 import StatusOverlay from './StatusOverlay';
 import { formatAbbreviateNumber } from '../utils/numberFormatting';
 import SVG from './SVG';
