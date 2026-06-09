@@ -21,7 +21,7 @@ const ByList: React.FC = () => {
     const [isRecommending, setIsRecommending] = useState(false);
     const [recommendError, setRecommendError] = useState('');
     const [estimatedWaitTime, setEstimatedWaitTime] = useState<number | null>(null);
-    const [selectedModel, setSelectedModel] = useState<'v2' | 'v3' | 'v4' | 'content'>('v2');
+    const [selectedModel, setSelectedModel] = useState<'v2' | 'v3' | 'v4' | 'content'>('v4');
     const [importProgress, setImportProgress] = useState(0);
     const [importLog, setImportLog] = useState('');
 
@@ -143,7 +143,7 @@ const ByList: React.FC = () => {
         setIsRecommending(true);
         setRecommendError("");
 
-        setEnrichedRecommendations(null);
+        // Don't clear enrichedRecommendations here so the user can still interact with the current list while loading
 
         try {
             // 1. Get raw MAL IDs and scores from our local backend (top 500)
@@ -236,13 +236,16 @@ const ByList: React.FC = () => {
         }
     }, [estimatedWaitTime]);
 
+    const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
     // If we have recommendations, render the dashboard
     if (enrichedRecommendations) {
         return (
             <div className="flex flex-col h-screen bg-linear-to-br from-[#02020f] to-[#122545] text-white overflow-hidden font-sans">
                 <Navbar color="#60a5fa" />
-                <div className="flex flex-1 overflow-hidden mt-[72px]">
-                    <div className="p-6">
+                <div className="flex flex-col lg:flex-row flex-1 overflow-hidden mt-[72px]">
+                    {/* Desktop Sidebar */}
+                    <div className="hidden lg:block w-[280px] flex-shrink-0 border-r border-white/10 p-6 h-full overflow-y-auto custom-scrollbar">
                         <FilterSidebar
                             filters={filters}
                             setFilters={setFilters}
@@ -256,7 +259,36 @@ const ByList: React.FC = () => {
                         importedData={importedData}
                         selectedModel={selectedModel}
                         onModelChange={handleModelChange}
+                        isRecommending={isRecommending}
                     />
+
+                    {/* Mobile Filter FAB */}
+                    <button 
+                        onClick={() => setIsMobileFilterOpen(true)}
+                        className="lg:hidden fixed bottom-6 right-6 z-50 p-3.5 rounded-full bg-[#60a5fa] text-white shadow-[0_0_15px_rgba(96,165,250,0.4)] transition-transform active:scale-95"
+                    >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                    </button>
+
+                    {/* Mobile Filter Bottom Sheet Overlay */}
+                    <div 
+                        className={`lg:hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isMobileFilterOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                        onClick={() => setIsMobileFilterOpen(false)}
+                    >
+                        <div 
+                            className={`absolute bottom-0 left-0 right-0 max-h-[85vh] bg-[#0b172f]/90 backdrop-blur-md border-t border-white/10 rounded-t-3xl p-6 pb-10 overflow-y-auto custom-scrollbar transition-transform duration-300 transform ${isMobileFilterOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6"></div>
+                            <FilterSidebar
+                                filters={filters}
+                                setFilters={setFilters}
+                                availableOptions={availableOptions}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -267,7 +299,7 @@ const ByList: React.FC = () => {
             <Navbar color="#60a5fa" />
 
             <section className="bg-transparent relative text-white overflow-hidden">
-                <div className="relative z-10 flex flex-col-reverse lg:flex-row items-center justify-between px-6 sm:px-10 lg:px-27 pt-24 lg:pt-36 pb-5 gap-1 max-w-[1400px] mx-auto">
+                <div className="relative z-10 flex flex-col-reverse lg:flex-row items-center justify-between px-4 sm:px-10 lg:px-27 pt-24 lg:pt-36 pb-5 gap-1 max-w-[1400px] mx-auto">
 
                     <div className={`text-left w-full max-w-3xl transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
                         <h1 className="text-3xl sm:text-4xl font-bold leading-tight mb-4 text-[#9fadbd]">
@@ -457,7 +489,7 @@ const ByList: React.FC = () => {
                         <img
                             src="/img2.png"
                             alt="img2"
-                            className={`block lg:hidden w-[350px] sm:w-[350px] lg:w-[320px] h-auto drop-shadow-xl rounded-md transition-opacity duration-500 mb-3 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                            className={`block lg:hidden w-full max-w-[300px] sm:max-w-[350px] lg:w-[320px] h-auto drop-shadow-xl rounded-md transition-opacity duration-500 mb-3 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                         />
                         <img
                             src="/img3.png"

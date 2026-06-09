@@ -23,10 +23,10 @@ const Home: React.FC = () => {
         <>
             <Navbar />
             <section className="min-h-screen bg-linear-to-br from-[#02020f] to-[#122545] relative text-white overflow-hidden">
-                <div className="relative z-10 flex flex-col-reverse lg:flex-row items-center justify-between px-6 sm:px-10 lg:px-27 pt-24 lg:pt-30 pb-5 gap-1">
+                <div className="relative z-10 flex flex-col-reverse lg:flex-row items-center justify-between px-4 sm:px-10 lg:px-27 pt-24 lg:pt-30 pb-5 gap-1">
                     <div className={`text-left w-full max-w-3xl transition-opacity duration-500 ${isLoaded ? 'animate-fade-in-top opacity-100' : 'opacity-0'}`}>
-                        <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-6">
-                            <span className="text-blue-400 text-5xl sm:text-6xl font-black font-newtegomin">Sakata Sensei,</span><br />
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-6">
+                            <span className="text-blue-400 text-4xl sm:text-5xl lg:text-6xl font-black font-newtegomin">Sakata Sensei,</span><br />
                             <span className="text-white font-newtegomin">オススメはなんですか ??</span>
                         </h1>
 
@@ -66,7 +66,7 @@ const Home: React.FC = () => {
                         <img
                             src="/img2.png"
                             alt="img2"
-                            className={`block lg:hidden w-[350px] sm:w-[350px] lg:w-[320px] h-auto drop-shadow-2xl rounded-lg transition-opacity duration-500 mb-3 ${isLoaded ? 'animate-fade-in-top opacity-100' : 'opacity-0'}`}
+                            className={`block lg:hidden w-full max-w-[300px] sm:max-w-[350px] lg:w-[320px] h-auto drop-shadow-2xl rounded-lg transition-opacity duration-500 mb-3 ${isLoaded ? 'animate-fade-in-top opacity-100' : 'opacity-0'}`}
                         />
 
                         {/* Desktop image */}
@@ -79,7 +79,7 @@ const Home: React.FC = () => {
                 </div>
 
                 {/* Trending Anime */}
-                <div className={`transition-all duration-500 mt-5 mb-10 px-6 sm:px-10 lg:px-27 ${isLoaded ? "animate-fade-in-bottom opacity-100" : "opacity-0"}`}>
+                <div className={`transition-all duration-500 mt-5 mb-10 px-4 sm:px-10 lg:px-27 ${isLoaded ? "animate-fade-in-bottom opacity-100" : "opacity-0"}`}>
                     <TrendingAnime />
                 </div>
             </section>

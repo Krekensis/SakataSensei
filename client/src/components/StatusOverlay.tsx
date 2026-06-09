@@ -91,7 +91,7 @@ const StatusOverlay: React.FC<StatusOverlayProps> = ({ anime, importedData }) =>
             onClick={handleAdd}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="absolute top-2 right-2 bg-[#11161d]/80 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-pointer hover:bg-[#11161d]/90 z-10 shadow-md"
+            className="absolute top-2 right-2 bg-[#11161d]/80 p-1.5 rounded-lg opacity-100 lg:opacity-0 group-hover:opacity-100 transition-all cursor-pointer hover:bg-[#11161d]/90 z-10 shadow-md"
             title="Add to Planning List"
         >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 transition-colors" style={{ color: isHovered ? animeColor : '#8ba0b2' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

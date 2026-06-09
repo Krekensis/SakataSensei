@@ -3,6 +3,7 @@ import type { FilterState } from './FilterSidebar';
 import GridCard from './GridCard';
 import ListCard from './ListCard';
 import GridCumListCard from './GridCumListCard';
+import SVG from './SVG';
 
 interface Props {
     recommendations: any[];
@@ -10,6 +11,7 @@ interface Props {
     importedData: any;
     selectedModel: 'v2' | 'v3' | 'v4' | 'content';
     onModelChange: (model: 'v2' | 'v3' | 'v4' | 'content') => void;
+    isRecommending?: boolean;
 }
 
 const GridIcon = () => (
@@ -43,9 +45,10 @@ const GridCumListIcon = () => (
     </svg>
 );
 
-const Recommendations: React.FC<Props> = ({ recommendations, filters, importedData, selectedModel, onModelChange }) => {
+const Recommendations: React.FC<Props> = ({ recommendations, filters, importedData, selectedModel, onModelChange, isRecommending }) => {
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'grid-cum-list'>('grid');
     const [currentPage, setCurrentPage] = useState(1);
+    const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
 
     const userListIds = useMemo(() => {
         if (!importedData) return new Set<number>();
@@ -159,60 +162,75 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
 
     return (
         <div className="flex-1 flex flex-col min-h-0 bg-transparent font-sans">
-            <div className="flex items-center justify-between p-8">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between p-4 sm:p-8 gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-[#9fadbd]">Recommendations</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-[#9fadbd]">Recommendations</h2>
                     <p className="text-[#8ba0b2] text-sm mt-1">Showing {filteredList.length} of {recommendations.length} anime</p>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1 bg-[#151f2e]/60 p-1 rounded-md shadow-sm">
-                        <span className="text-xs uppercase tracking-wider font-bold text-[#8ba0b2] px-2">Model</span>
-                        <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
-                        <button
-                            onClick={() => onModelChange('v2')}
-                            className={`px-3 h-[34px] flex items-center justify-center text-sm font-bold rounded transition-colors ${selectedModel === 'v2' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'}`}
-                        >
-                            V2
-                        </button>
-                        <button
-                            onClick={() => onModelChange('v3')}
-                            className={`px-3 h-[34px] flex items-center justify-center text-sm font-bold rounded transition-colors ${selectedModel === 'v3' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'}`}
-                        >
-                            V3
-                        </button>
-                        <button
-                            onClick={() => onModelChange('v4')}
-                            className={`px-3 h-[34px] flex items-center justify-center text-sm font-bold rounded transition-colors ${selectedModel === 'v4' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'}`}
-                        >
-                            V4 (Hybrid)
-                        </button>
-                        <button
-                            onClick={() => onModelChange('content')}
-                            className={`px-3 h-[34px] flex items-center justify-center text-sm font-bold rounded transition-colors ${selectedModel === 'content' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'}`}
-                        >
-                            Content AE
-                        </button>
+                <div className="flex flex-wrap items-center justify-end w-full xl:w-auto gap-3 sm:gap-4 mt-2 xl:mt-0">
+                    <div 
+                        className="relative flex items-center bg-[#151f2e]/60 hover:bg-[#1f293d] px-2 sm:px-3 rounded-md shadow-sm transition-colors cursor-pointer h-[36px] sm:h-[40px]"
+                        onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                        onMouseLeave={() => setIsModelDropdownOpen(false)}
+                    >
+                        {isRecommending && (
+                            <SVG name="loader" size="" className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 animate-spin text-[#60a5fa]" />
+                        )}
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span className="text-[10px] sm:text-xs uppercase tracking-wider font-bold text-[#8ba0b2]">Model:</span>
+                            <span className="text-xs sm:text-sm font-bold text-white leading-none pt-px">
+                                {selectedModel === 'v2' ? 'V2' : selectedModel === 'v3' ? 'V3' : selectedModel === 'v4' ? 'V4 (Hybrid)' : 'Content AE'}
+                            </span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8ba0b2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-200 ${isModelDropdownOpen ? 'rotate-180' : ''}`}>
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+
+                        {isModelDropdownOpen && (
+                            <div className="absolute top-full right-0 xl:left-0 pt-2 min-w-full w-max z-30">
+                                <div className="bg-[#0b172f]/80 backdrop-blur-md border border-[#1f293d] rounded-md shadow-[0_0_40px_rgba(0,0,0,0.35)] overflow-hidden flex flex-col py-1">
+                                    {[
+                                        { id: 'v2', label: 'V2' },
+                                        { id: 'v3', label: 'V3' },
+                                        { id: 'v4', label: 'V4 (Hybrid)' },
+                                        { id: 'content', label: 'Content AE' }
+                                    ].map(option => (
+                                        <div
+                                            key={option.id}
+                                            className={`px-4 py-2 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap ${selectedModel === option.id ? 'bg-[#60a5fa]/90 text-white' : 'text-[#8ba0b2] hover:bg-[#1f293d]/80 hover:text-white'}`}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onModelChange(option.id as any);
+                                                setIsModelDropdownOpen(false);
+                                            }}
+                                        >
+                                            {option.label}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="flex items-center gap-1 bg-[#151f2e]/60 p-1 rounded-md shadow-sm">
+                    <div className="flex items-center gap-1 bg-[#151f2e]/60 px-1 rounded-md shadow-sm h-[36px] sm:h-[40px]">
                         <button
                             onClick={() => { setViewMode('grid'); setCurrentPage(1); }}
-                            className={`p-2 rounded ${viewMode === 'grid' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
+                            className={`w-[28px] h-[28px] sm:w-[32px] sm:h-[32px] flex items-center justify-center rounded ${viewMode === 'grid' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
                             title="Grid View"
                         >
                             <GridIcon />
                         </button>
                         <button
                             onClick={() => { setViewMode('grid-cum-list'); setCurrentPage(1); }}
-                            className={`p-2 rounded ${viewMode === 'grid-cum-list' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
+                            className={`w-[28px] h-[28px] sm:w-[32px] sm:h-[32px] flex items-center justify-center rounded ${viewMode === 'grid-cum-list' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
                             title="Compact List View"
                         >
                             <GridCumListIcon />
                         </button>
                         <button
                             onClick={() => { setViewMode('list'); setCurrentPage(1); }}
-                            className={`p-2 rounded ${viewMode === 'list' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
+                            className={`w-[28px] h-[28px] sm:w-[32px] sm:h-[32px] flex items-center justify-center rounded ${viewMode === 'list' ? 'bg-[#60a5fa] text-white' : 'text-[#8ba0b2] hover:text-white hover:bg-[#1f293d]'} transition-colors`}
                             title="List View"
                         >
                             <ListIcon />
@@ -221,7 +239,7 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-8 custom-scrollbar">
                 {filteredList.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-64 text-center">
                         <div className="mb-4 text-[#8ba0b2]">
@@ -238,7 +256,7 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
                 ) : (
                     <>
                         {viewMode === 'grid' ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-6 gap-x-2 gap-y-4 sm:gap-x-4 sm:gap-y-8">
                                 {currentItems.map((anime) => (
                                     <GridCard key={anime.idMal} anime={anime} importedData={importedData} />
                                 ))}

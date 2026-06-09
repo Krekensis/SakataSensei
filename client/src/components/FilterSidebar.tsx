@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
+import { formatAbbreviateNumber } from '../utils/numberFormatting';
 
 export interface FilterState {
     excludeList: boolean;
@@ -119,7 +120,7 @@ const MultiSelect = ({ label, options, selected, onChange, isOpen, onToggle }: {
             </div>
 
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-[#0b172f] backdrop-blur-md rounded-md shadow-xl max-h-60 overflow-y-auto custom-scrollbar border border-[#0b1622]">
+                <div className="absolute z-50 w-full mt-1 bg-[#0b172f] backdrop-blur-md rounded-md shadow-[0_0_40px_rgba(0,0,0,0.35)] max-h-60 overflow-y-auto custom-scrollbar border border-[#0b1622]">
                     {options.map(opt => (
                         <div
                             key={opt}
@@ -150,7 +151,7 @@ export const FilterSidebar: React.FC<Props> = ({ filters, setFilters, availableO
     };
 
     return (
-        <div className="w-full lg:w-[280px] flex-shrink-0 bg-transparent lg:border-r lg:border-white/10 p-6 h-full overflow-y-auto custom-scrollbar font-sans text-white">
+        <div className="w-full h-full flex flex-col font-sans text-white">
             <h2 className="text-lg font-bold text-[#9fadbd] mb-6 tracking-wide">Filters</h2>
 
             {/* Toggles */}
@@ -209,8 +210,7 @@ export const FilterSidebar: React.FC<Props> = ({ filters, setFilters, availableO
                     <div className="flex justify-between items-center mb-2">
                         <label className="text-xs font-semibold text-[#8ba0b2] uppercase tracking-wide">Popularity</label>
                         <span className="text-xs text-[#9fadbd]">
-                            {filters.popularityRange[0] >= 1000 ? (filters.popularityRange[0] / 1000).toFixed(0) + 'k' : filters.popularityRange[0]} -
-                            {filters.popularityRange[1] >= 1000 ? (filters.popularityRange[1] / 1000).toFixed(0) + 'k' : filters.popularityRange[1]}
+                            {formatAbbreviateNumber(filters.popularityRange[0])} - {formatAbbreviateNumber(filters.popularityRange[1])}
                         </span>
                     </div>
                     <Slider

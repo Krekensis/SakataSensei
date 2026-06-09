@@ -48,11 +48,11 @@ const Navbar: React.FC<NavbarProps> = ({ color = "#60a5fa" }) => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden px-6 pb-4 text-white font-medium space-y-2 bg-black/80 backdrop-blur-md">
-          <Link to="/" className="block hover:text-(--hover-color) transition-colors duration-300">Home</Link>
-          <Link to="/recommend/by-list" className="block hover:text-(--hover-color) transition-colors duration-300">Your List</Link>
-          <Link to="/recommend/by-anime" className="block hover:text-(--hover-color) transition-colors duration-300">Similar</Link>
-          <Link to="/recommend/by-chat" className="block hover:text-(--hover-color) transition-colors duration-300">AI Chat</Link>
+        <div className="md:hidden px-6 pb-4 text-white font-medium space-y-2 bg-black/40 backdrop-blur-xl border-b border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.35)]">
+          <Link to="/" onClick={() => setIsOpen(false)} className="block hover:text-(--hover-color) transition-colors duration-300">Home</Link>
+          <Link to="/recommend/by-list" onClick={() => setIsOpen(false)} className="block hover:text-(--hover-color) transition-colors duration-300">Your List</Link>
+          <Link to="/recommend/by-anime" onClick={() => setIsOpen(false)} className="block hover:text-(--hover-color) transition-colors duration-300">Similar</Link>
+          <Link to="/recommend/by-chat" onClick={() => setIsOpen(false)} className="block hover:text-(--hover-color) transition-colors duration-300">AI Chat</Link>
         </div>
       )}
     </nav>
