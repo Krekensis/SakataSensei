@@ -237,6 +237,7 @@ const ByList: React.FC = () => {
     }, [estimatedWaitTime]);
 
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+    const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
     // If we have recommendations, render the dashboard
     if (enrichedRecommendations) {
@@ -263,7 +264,7 @@ const ByList: React.FC = () => {
                     />
 
                     {/* Mobile Filter FAB */}
-                    <button 
+                    <button
                         onClick={() => setIsMobileFilterOpen(true)}
                         className="lg:hidden fixed bottom-6 right-6 z-50 p-3.5 rounded-full bg-[#60a5fa] text-white shadow-[0_0_15px_rgba(96,165,250,0.4)] transition-transform active:scale-95"
                     >
@@ -273,15 +274,37 @@ const ByList: React.FC = () => {
                     </button>
 
                     {/* Mobile Filter Bottom Sheet Overlay */}
-                    <div 
+                    <div
                         className={`lg:hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isMobileFilterOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                         onClick={() => setIsMobileFilterOpen(false)}
                     >
-                        <div 
-                            className={`absolute bottom-0 left-0 right-0 max-h-[85vh] bg-[#0b172f]/90 backdrop-blur-md border-t border-white/10 rounded-t-3xl p-6 pb-10 overflow-y-auto custom-scrollbar transition-transform duration-300 transform ${isMobileFilterOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                        <div
+                            className={`absolute bottom-0 left-0 right-0 max-h-[70vh] bg-[#0b172f]/90 backdrop-blur-md border-t border-white/10 rounded-t-3xl p-6 pb-10 overflow-y-auto custom-scrollbar transition-transform duration-300 transform ${isMobileFilterOpen ? 'translate-y-0' : 'translate-y-full'}`}
                             onClick={e => e.stopPropagation()}
+                            onTouchStart={e => {
+                                const target = e.target as HTMLElement;
+                                if (target.closest('.rc-slider') || target.closest('.z-50')) {
+                                    setTouchStartY(null);
+                                    return;
+                                }
+                                setTouchStartY(e.touches[0].clientY);
+                                e.currentTarget.setAttribute('data-start-scroll', e.currentTarget.scrollTop.toString());
+                            }}
+                            onTouchEnd={e => {
+                                if (touchStartY === null) return;
+                                const touchEndY = e.changedTouches[0].clientY;
+                                const currentTarget = e.currentTarget as HTMLDivElement;
+                                const startScroll = parseFloat(currentTarget.getAttribute('data-start-scroll') || '0');
+
+                                if (startScroll <= 0 && currentTarget.scrollTop <= 0 && touchEndY - touchStartY > 50) {
+                                    setIsMobileFilterOpen(false);
+                                }
+                                setTouchStartY(null);
+                            }}
                         >
-                            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6"></div>
+                            <div className="w-full py-4 -mt-4 cursor-grab active:cursor-grabbing flex justify-center">
+                                <div className="w-12 h-1.5 bg-white/20 rounded-full mb-2"></div>
+                            </div>
                             <FilterSidebar
                                 filters={filters}
                                 setFilters={setFilters}

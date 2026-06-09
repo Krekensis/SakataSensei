@@ -47,7 +47,7 @@ const ListCard: React.FC<Props> = ({ anime, importedData }) => {
                 <StatusOverlay anime={anime} importedData={importedData} />
             </div>
 
-            <div className="pl-3 sm:pl-5 py-0 sm:py-2 pr-1 sm:pr-2 flex flex-row flex-1 relative z-10 overflow-hidden gap-2 sm:gap-4">
+            <div className="pl-3 sm:pl-5 py-0 sm:py-2 pr-0 sm:pr-2 flex flex-row flex-1 relative z-10 overflow-hidden gap-2 sm:gap-4">
                 {/* Left Content */}
                 <div className="flex flex-col h-full w-full sm:w-[70%] sm:pr-4 sm:border-r border-white/5">
                     <div className="flex flex-row justify-between items-start w-full gap-2 sm:gap-3">
@@ -66,9 +66,9 @@ const ListCard: React.FC<Props> = ({ anime, importedData }) => {
                             >
                                 {anime.title?.english || anime.title?.romaji}
                             </h3>
-                            <div className="text-[9px] sm:text-xs font-semibold text-[#8ba0b2] mt-0.5 sm:mt-1 flex items-center gap-1 sm:gap-2 flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible custom-scrollbar-hidden w-full">
+                            <div className="text-[9px] sm:text-xs font-semibold text-[#acc7dd] sm:text-[#8ba0b2] mt-0.5 sm:mt-1 flex items-center gap-1 sm:gap-2 flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible custom-scrollbar-hidden w-full">
                                 {anime.studios?.nodes?.[0]?.name && (
-                                    <span className="font-bold whitespace-nowrap shrink-0">{anime.studios.nodes[0].name}</span>
+                                    <span className="hidden sm:block font-bold whitespace-nowrap shrink-0">{anime.studios.nodes[0].name}</span>
                                 )}
                                 <span className="px-1 sm:px-1.5 py-0.5 whitespace-nowrap shrink-0">{anime.format || 'TV'}</span>
                                 <span className="px-1 sm:px-1.5 py-0.5 whitespace-nowrap shrink-0">{anime.status ? anime.status.replace('_', ' ') : 'FINISHED'}</span>

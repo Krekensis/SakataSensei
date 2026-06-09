@@ -94,12 +94,12 @@ export async function fetchMALList(token: string): Promise<ImportResult> {
                 else if (mapped.status === "PLANNING") result.planning.push(mapped);
                 else if (mapped.status === "DROPPED") result.dropped.push(mapped);
                 else if (mapped.status === "PAUSED") result.onHold.push(mapped);
-
-                result.totalEntries++;
             }
 
             nextUrl = paging?.next || null;
         }
+
+        result.totalEntries = result.completed.length + result.current.length + result.planning.length + result.dropped.length + result.onHold.length;
 
         return result;
     } catch (err) {

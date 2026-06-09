@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import type { FilterState } from './FilterSidebar';
 import GridCard from './GridCard';
 import ListCard from './ListCard';
@@ -49,6 +49,14 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
     const [viewMode, setViewMode] = useState<'grid' | 'list' | 'grid-cum-list'>('grid');
     const [currentPage, setCurrentPage] = useState(1);
     const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 640);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     const userListIds = useMemo(() => {
         if (!importedData) return new Set<number>();
@@ -118,7 +126,9 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
         });
     }, [recommendations, filters, userListIds]);
 
-    const itemsPerPage = viewMode === 'grid' ? 36 : viewMode === 'grid-cum-list' ? 30 : 15;
+    const itemsPerPage = isMobile
+        ? (viewMode === 'grid' ? 18 : viewMode === 'grid-cum-list' ? 15 : 15)
+        : (viewMode === 'grid' ? 36 : viewMode === 'grid-cum-list' ? 30 : 15);
     const totalPages = Math.ceil(filteredList.length / itemsPerPage);
 
     if (currentPage > totalPages && totalPages > 0) {
@@ -135,7 +145,7 @@ const Recommendations: React.FC<Props> = ({ recommendations, filters, importedDa
     };
 
     const PaginationControls = () => (
-        <div className="flex items-center justify-center gap-6 my-10 font-sans">
+        <div className="flex items-center justify-center gap-6 mt-6 mb-24 sm:my-10 font-sans">
             <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}

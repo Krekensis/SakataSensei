@@ -204,9 +204,9 @@ export async function fetchAniList(token: string, viewerId: string): Promise<Imp
                     result.onHold = entries;
                     break;
             }
-
-            result.totalEntries += entries.length;
         });
+
+        result.totalEntries = result.completed.length + result.current.length + result.planning.length + result.dropped.length + result.onHold.length;
 
         return result;
 
