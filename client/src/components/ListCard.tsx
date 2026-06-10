@@ -77,7 +77,7 @@ const ListCard: React.FC<Props> = ({ anime, importedData }) => {
                             </div>
                         </div>
 
-                        <div className="flex flex-col items-start justify-center gap-1 sm:gap-2 flex-shrink-0 bg-[#151f2e]/50 backdrop-blur-xs px-1.5 py-1 sm:px-3 sm:py-2 rounded w-[65px] sm:w-[85px]">
+                        <div className="flex flex-col items-start justify-center gap-1 sm:gap-2 flex-shrink-0 bg-[#151f2e]/50 backdrop-blur-xs px-1.5 py-1 sm:px-3 sm:py-2 rounded w-fit min-w-[65px] sm:min-w-[95px]">
                             {anime.averageScore && (
                                 <div className="text-[#9fadbd] text-[10px] sm:text-sm font-bold flex items-center gap-1 sm:gap-2">
                                     <div className="w-3 sm:w-4 flex justify-center">
