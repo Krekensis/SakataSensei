@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import Home from './pages/Home'
 import ByList from './pages/recommend/ByList'
 import ByAnime from './pages/recommend/ByAnime'
@@ -18,6 +19,7 @@ function App() {
           <Route path="/error" element={<ErrorPage />} />
         </Routes>
       </div>
+      <Analytics />
     </AuthProvider>
   )
 }
